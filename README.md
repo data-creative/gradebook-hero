@@ -20,8 +20,8 @@ Make a copy of this template repo (as necessary). Clone your copy of the repo on
 Setup and activate a new Anaconda virtual environment:
 
 ```sh
-conda create -n flask-sheets-env-2023 python=3.10
-conda activate flask-sheets-env-2023
+conda create -n gradebook-hero-env python=3.10
+conda activate gradebook-hero-env
 ```
 
 Install package dependencies:
@@ -87,13 +87,14 @@ GOOGLE_CLIENT_SECRET="____________"
 #
 # GOOGLE SHEETS DATABASE
 #
-GOOGLE_SHEETS_DOCUMENT_ID="____________"
+#GOOGLE_SHEETS_DOCUMENT_ID="____________"
 
 #
 # GOOGLE ANALYTICS
 #
-GA_TRACKER_ID="UA-XXXXXXX-1"
+#GA_TRACKER_ID="UA-XXXXXXX-1"
 ```
+
 
 
 
@@ -105,7 +106,7 @@ GA_TRACKER_ID="UA-XXXXXXX-1"
 After configuring the Google Sheet database and populating it with products, you should be able to test out the app's ability to fetch products (and generate new orders):
 
 ```sh
-python -m app.sheets_service
+python -m app.spreadsheet_service
 ```
 
 ### Web Application
