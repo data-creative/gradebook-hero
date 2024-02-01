@@ -51,7 +51,7 @@ class SpreadsheetService:
     def get_sheet(self, sheet_name):
         return self.doc.worksheet(sheet_name)
 
-    def get_records(self, sheet_name):
+    def get_records(self, sheet_name:str):
         """Gets all records from a sheet,
             converts datetime columns back to Python datetime objects
         """
@@ -59,9 +59,7 @@ class SpreadsheetService:
         sheet = self.get_sheet(sheet_name) #> <class 'gspread.models.Worksheet'>
         records = sheet.get_all_records() #> <class 'list'>
         for record in records:
-            if record.get("created_at"):
-                record["created_at"] = self.parse_timestamp(record["created_at"])
-        return sheet, records
+            print(record)
 
     def destroy_all(self, sheet_name):
         """Removes all records from a given sheet, except the header row."""
@@ -76,7 +74,4 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    docs = ss.client.list_spreadsheet_files()
-    for doc in docs:
-        print(type(doc))
-        pprint(doc)
+    ss.get_records("gradebook-test")

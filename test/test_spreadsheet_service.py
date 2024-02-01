@@ -155,3 +155,7 @@ def test_get_user_orders(ss):
     assert [o["product_name"] for o in user_orders] == ["Product 2", "Product 2", "Product 2"]
     assert [o["product_price"] for o in user_orders] == [4.99,4.99,4.99]
     assert [isinstance(o["created_at"], datetime) for o in user_orders] == [True, True, True]
+
+
+if __name__ == "__main__":
+    test_document()
