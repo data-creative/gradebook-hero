@@ -23,11 +23,11 @@ def ss():
     ss = SpreadsheetService(document_id=GOOGLE_SHEETS_TEST_DOCUMENT_ID)
 
     # setup / remove any records that may exist:
-    ss.destroy_all("products")
-    ss.destroy_all("orders")
+    #ss.destroy_all("products")
+    #ss.destroy_all("orders")
 
     # seed default products:
-    ss.seed_products()
+    #ss.seed_products()
 
     yield ss
 

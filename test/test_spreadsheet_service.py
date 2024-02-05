@@ -12,6 +12,8 @@ load_dotenv()
 CI_ENV = (os.getenv("CI", default="false") == "true")
 CI_SKIP_MESSAGE = "taking a lighter touch to testing on the CI server, to reduce API usage and prevent rate limits"
 
+TEST_USERNAME = os.getenv("TEST_USERNAME")
+
 
 def test_generate_timestamp():
     #dt = ss.generate_timestamp()
@@ -46,43 +48,26 @@ def test_document(ss):
 
 @pytest.mark.skipif(CI_ENV, reason=CI_SKIP_MESSAGE)
 def test_get_sheet(ss):
-    sheet = ss.get_sheet("products")
+    sheet = ss.get_sheet("gradebook-final")
     assert isinstance(sheet, Worksheet)
 
 @pytest.mark.skipif(CI_ENV, reason=CI_SKIP_MESSAGE)
-def test_get_records(ss):
-    sheet, products = ss.get_records("products")
-    assert isinstance(sheet, Worksheet)
-    assert isinstance(products, list)
+def test_get_final_grade(ss):
+    grade_info = ss.get_final_grade(TEST_USERNAME)
+    assert isinstance(grade_info, list)
 
 @pytest.mark.skipif(CI_ENV, reason=CI_SKIP_MESSAGE)
-def test_get_products(ss):
-    products = ss.get_products()
-    assert len(products) == 3
-    assert [p["name"] for p in products] == ["Strawberries", "Cup of Tea", "Textbook"]
-    assert [p["id"] for p in products] == [1,2,3]
+def test_get_assignment_grade(ss):
+    grade_info = ss.get_assignment_grade(username=TEST_USERNAME, assignment_name="stocks")
+    assert isinstance(grade_info, list)
 
-@pytest.mark.skipif(CI_ENV, reason=CI_SKIP_MESSAGE)
-def test_get_orders(ss):
-    orders = ss.get_orders()
-    assert not any(orders)
-
-
-@pytest.mark.skipif(CI_ENV, reason=CI_SKIP_MESSAGE)
-def test_destroy_all(ss):
-    sheet, records = ss.get_records("products")
-    assert len(records) == 3
-
-    ss.destroy_all("products")
-
-    sheet, records = ss.get_records("products")
-    assert not any(records)
 
 
 #
 # WRITING DATA
-#
+# TODO: when to write data within the context of this app?
 
+"""
 @pytest.mark.skipif(CI_ENV, reason=CI_SKIP_MESSAGE)
 def test_create_product(ss):
 
@@ -159,3 +144,5 @@ def test_get_user_orders(ss):
 
 if __name__ == "__main__":
     test_document()
+
+"""

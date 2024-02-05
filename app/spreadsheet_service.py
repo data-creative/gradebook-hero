@@ -51,22 +51,19 @@ class SpreadsheetService:
     def get_sheet(self, sheet_name):
         return self.doc.worksheet(sheet_name)
 
-    def get_records(self, sheet_name:str):
-        """Gets all records from a sheet,
-            converts datetime columns back to Python datetime objects
+    def get_final_grade(self, username):
+        """
+            Gets all records from a sheet,
         """
         #print(f"GETTING RECORDS FROM SHEET: '{sheet_name}'")
-        sheet = self.get_sheet(sheet_name) #> <class 'gspread.models.Worksheet'>
-        records = sheet.get_all_records() #> <class 'list'>
-        for record in records:
-            print(record)
-
-    def destroy_all(self, sheet_name):
-        """Removes all records from a given sheet, except the header row."""
-        sheet, records = self.get_records(sheet_name)
-        # start on the second row, and delete one more than the number of records,
-        # ... to account for the header row
-        sheet.delete_rows(start_index=2, end_index=len(records)+1)
+        sheet = self.get_sheet("gradebook-final") #> <class 'gspread.models.Worksheet'>
+        row_index = sheet.col_values(1).index(f'#{username}') + 1
+        return sheet.row_values(row_index)
+    
+    def get_assignment_grade(self, username, assignment_name):
+        sheet = self.get_sheet(f"{assignment_name}-mjr") #> <class 'gspread.models.Worksheet'>
+        row_index = sheet.col_values(3).index(username) + 1
+        return sheet.row_values(row_index)
 
 
 
@@ -74,4 +71,4 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_records("gradebook-test")
+    ss.get_assignment_grade("mb6244", "stocks")
