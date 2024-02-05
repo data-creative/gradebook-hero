@@ -75,14 +75,12 @@
     -->
     {% set public_nav = [
       ('/about', 'about', 'About'),
-      ('/products', 'products', 'Products'),
       ('/login', 'login', 'Login'),
     ] -%}
 
     {% set protected_nav = [
       ('/about', 'about', 'About'),
-      ('/products', 'products', 'Products'),
-      ('/user/orders', 'user_orders', 'Orders'),
+      ('/user/courses', 'courses', 'Courses'),
     ] -%}
 
     {% set active_page = active_page|default('home') -%}

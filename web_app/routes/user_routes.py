@@ -6,8 +6,20 @@ from web_app.routes.wrappers import authenticated_route
 user_routes = Blueprint("user_routes", __name__)
 
 #
-# USER ORDERS
+# USER ROUTES
 #
+
+@user_routes.route("/user/courses")
+@authenticated_route
+def courses():
+    print("USER COURSES...")
+    current_user = session.get("current_user")
+    service = current_app.config["SPREADSHEET_SERVICE"]
+    #...TODO: do work to get courses
+    return render_template("courses.html")
+
+
+"""
 
 @user_routes.route("/user/orders")
 @authenticated_route
@@ -49,6 +61,7 @@ def create_order():
         flash(f"Oops, something went wrong: {err}", "warning")
         return redirect("/products")
 
+ """
 
 #
 # USER PROFILE
