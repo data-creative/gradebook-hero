@@ -57,12 +57,18 @@ class SpreadsheetService:
     #####################
 
     def get_student_courses(self, email:str) -> list:
-        sheet = self.get_sheet("students_roster")
- 
-        all_student_courses = sheet.get_all_records()
-        student_courses = [course["COURSE_ID"] for course in all_student_courses if course["STUDENT_EMAIL"] == email]
+        students_sheet = self.get_sheet("students_roster")
+        all_student_course_ids = students_sheet.get_all_records()
+        student_course_ids = [course["COURSE_ID"] for course in all_student_course_ids if course["STUDENT_EMAIL"] == email]
+        
+        courses_sheet = self.get_sheet("courses")
+        all_courses = courses_sheet.get_all_records()
 
-        return student_courses
+        student_courses_info = [course_info for course_info in all_courses if course_info["COURSE_ID"] in student_course_ids]
+
+        return student_courses_info
+
+
 
     
     def get_assignment_grade(self, username, assignment_name):
