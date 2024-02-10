@@ -5,6 +5,27 @@
 
     <h1>Courses</h1>
 
-    <p class="lead">This is the courses page. your courses will be appear here.</p>
+    <p class="lead">This is the courses page. Your courses will be appear here.</p>
+
+    <table class="table table-hover text-center">
+        <thead>
+            <tr>
+                <th scope="col">Course</th>
+                <th scope="col">Professor</th>
+            </tr>
+            <tbody>
+                {% c for c in courses %}
+                <tr>
+                    <td>
+                        {{ r.DEPARTMENT }}-{{ r.NUMBER }}: {{ r.COURSE_NAME }}
+                    </td>
+                    <td>
+                        {{ r.PROFESSOR }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </thead>
+    </table>
 
 {% endblock %}

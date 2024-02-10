@@ -14,9 +14,11 @@ user_routes = Blueprint("user_routes", __name__)
 def courses():
     print("USER COURSES...")
     current_user = session.get("current_user")
-    service = current_app.config["SPREADSHEET_SERVICE"]
-    #...TODO: do work to get courses
-    return render_template("courses.html")
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    
+    courses = ss.get_student_courses(current_user["email"])
+
+    return render_template("courses.html", courses=courses)
 
 
 """
