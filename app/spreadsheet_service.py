@@ -14,18 +14,20 @@ from dotenv import load_dotenv
 import gspread
 from gspread.exceptions import SpreadsheetNotFound
 
+import time
+
 
 load_dotenv()
 
 DEFAULT_FILEPATH = os.path.join(os.path.dirname(__file__), "..", "gradebook-hero-google-credentials.json")
 GOOGLE_CREDENTIALS_FILEPATH = os.getenv("GOOGLE_CREDENTIALS_FILEPATH", default=DEFAULT_FILEPATH)
 
-GOOGLE_SHEETS_DOCUMENT_ID = os.getenv("GOOGLE_SHEETS_DOCUMENT_ID", default="OOPS Please get the spreadsheet identifier from its URL, and set the 'GOOGLE_SHEETS_DOCUMENT_ID' environment variable accordingly...")
+GOOGLE_SHEETS_MASTER_DOCUMENT_ID = os.getenv("GOOGLE_SHEETS_MASTER_DOCUMENT_ID", default="OOPS Please get the spreadsheet identifier from its URL, and set the 'GOOGLE_SHEETS_DOCUMENT_ID' environment variable accordingly...")
 
 
 class SpreadsheetService:
 
-    def __init__(self, credentials_filepath=GOOGLE_CREDENTIALS_FILEPATH, document_id=GOOGLE_SHEETS_DOCUMENT_ID):
+    def __init__(self, credentials_filepath=GOOGLE_CREDENTIALS_FILEPATH, document_id=GOOGLE_SHEETS_MASTER_DOCUMENT_ID):
         print("INITIALIZING NEW SPREADSHEET SERVICE...")
         self.client = gspread.service_account(filename=credentials_filepath)
         self.document_id = document_id
@@ -52,24 +54,12 @@ class SpreadsheetService:
         """note: this will make an API call each time, to get the new data"""
         return self.client.open_by_key(self.document_id) #> <class 'gspread.models.Spreadsheet'>
 
+    def set_active_document(self, document_id):
+        self.document_id = document_id
+
     def get_sheet(self, sheet_name):
         return self.doc.worksheet(sheet_name)
-
-    def get_final_grade(self, username):
-        """
-            Gets all records from a sheet,
-        """
-        #print(f"GETTING RECORDS FROM SHEET: '{sheet_name}'")
-        sheet = self.get_sheet("gradebook-final") #> <class 'gspread.models.Worksheet'>
-        row_index = sheet.col_values(1).index(f'#{username}') + 1
-        return sheet.row_values(row_index)
     
-<<<<<<< Updated upstream
-    def get_assignment_grade(self, username, assignment_name):
-        sheet = self.get_sheet(f"{assignment_name}-mjr") #> <class 'gspread.models.Worksheet'>
-        row_index = sheet.col_values(3).index(username) + 1
-        return sheet.row_values(row_index)
-=======
     #####################
     # COURSES FUNCTIONS #
     #####################
@@ -124,7 +114,6 @@ class SpreadsheetService:
         scores_sheet.update_acell("K2", "")
         
         return assignments_records
->>>>>>> Stashed changes
 
 
 
@@ -132,4 +121,4 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_assignment_grade("mb6244", "stocks")
+    ss.get_course_assignments("st4505@nyu.edu", "12345")
