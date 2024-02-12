@@ -43,6 +43,10 @@ class SpreadsheetService:
         date_format = "%Y-%m-%d %H:%M:%S.%f%z"
         return datetime.strptime(ts, date_format)
 
+    @staticmethod
+    def to_pct(frac):
+        return f'{float(frac)*100:.2f}%'
+
     @property
     def doc(self):
         """note: this will make an API call each time, to get the new data"""
@@ -60,10 +64,67 @@ class SpreadsheetService:
         row_index = sheet.col_values(1).index(f'#{username}') + 1
         return sheet.row_values(row_index)
     
+<<<<<<< Updated upstream
     def get_assignment_grade(self, username, assignment_name):
         sheet = self.get_sheet(f"{assignment_name}-mjr") #> <class 'gspread.models.Worksheet'>
         row_index = sheet.col_values(3).index(username) + 1
         return sheet.row_values(row_index)
+=======
+    #####################
+    # COURSES FUNCTIONS #
+    #####################
+
+    def get_student_courses(self, email:str) -> list:
+        self.set_active_document(GOOGLE_SHEETS_MASTER_DOCUMENT_ID)
+        students_sheet = self.get_sheet("students_roster")
+        all_student_course_ids = students_sheet.get_all_records()
+        student_course_ids = [course["COURSE_ID"] for course in all_student_course_ids if course["STUDENT_EMAIL"] == email]
+        
+        courses_sheet = self.get_sheet("courses")
+        all_courses = courses_sheet.get_all_records()
+
+        student_courses_info = [course_info for course_info in all_courses if course_info["COURSE_ID"] in student_course_ids]
+
+        return student_courses_info
+
+
+    def get_course_assignments(self, student_email:str, course_id:str) -> list:
+        #if coming from "courses" page, the active document will be "MASTER"
+        #we want to change that to the document ID of the specific course
+        if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
+            courses_sheet = self.get_sheet("courses")
+            courses_records = courses_sheet.get_all_records()
+        
+            course_document_id_list = [c["SHEETS_DOCUMENT_ID"] for c in courses_records if c["COURSE_ID"] == int(course_id)]
+
+            if len(course_document_id_list) == 0:
+                raise Exception("course not found...")
+                #TODO: handle within the route
+            if len(course_document_id_list) > 1:
+                raise Exception("course duplicate found...error")
+                #TODO: handle within the route
+            
+            self.set_active_document(course_document_id_list[0])
+
+        # now, get the assignments from the sheet
+        assignments_sheet = self.get_sheet("ASSIGNMENT_MASTER")
+        assignments_records = assignments_sheet.get_all_records()
+
+        
+        #assign the student email to the sheet that calculates scores...
+        scores_sheet = self.get_sheet("STUDENT_SCORES")
+        scores_sheet.update_acell("K2", student_email)
+
+        #find the assignment scores...
+        for i in range(len(assignments_records)):
+            del assignments_records[i]["SHEET_NAME"]
+            assignments_records[i]["GRADE"] = self.to_pct(scores_sheet.cell(i + 2, 9).value)
+
+        #clear the email
+        scores_sheet.update_acell("K2", "")
+        
+        return assignments_records
+>>>>>>> Stashed changes
 
 
 

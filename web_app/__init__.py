@@ -12,6 +12,7 @@ from app.spreadsheet_service import SpreadsheetService
 from web_app.routes.home_routes import home_routes
 from web_app.routes.auth_routes import auth_routes
 from web_app.routes.user_routes import user_routes
+from web_app.routes.courses_routes import courses_routes
 
 load_dotenv()
 
@@ -95,6 +96,7 @@ def create_app(spreadsheet_service=None):
     app.register_blueprint(home_routes)
     app.register_blueprint(auth_routes)
     app.register_blueprint(user_routes)
+    app.register_blueprint(courses_routes)
 
     return app
 

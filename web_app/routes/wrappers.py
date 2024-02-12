@@ -2,7 +2,7 @@
 import functools
 from flask import session, redirect, flash
 
-def authenticated_route(view):
+def student_authenticated_route(view):
     """
     Wrap a route with this decorator to prevent unauthenticated access.
 
