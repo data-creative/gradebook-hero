@@ -9,6 +9,7 @@
         <thead>
             <tr>
                 <th scope="col">Course</th>
+                <th scope="col">Term</th>
                 <th scope="col">Professor</th>
             </tr>
             <tbody>
@@ -16,6 +17,9 @@
                 <tr>
                     <td>
                         {{ c.DEPARTMENT }}-{{ c.NUMBER }}: {{ c.COURSE_NAME }}
+                    </td>
+                    <td>
+                        {{ c.TERM }}
                     </td>
                     <td>
                         {{ c.PROFESSOR }}
