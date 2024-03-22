@@ -1,7 +1,7 @@
 
 from flask import Blueprint, render_template, flash, redirect, current_app, url_for, session, request #, jsonify
 
-from web_app.routes.wrappers import student_authenticated_route
+from web_app.routes.wrappers import authenticated_route
 
 user_routes = Blueprint("user_routes", __name__)
 
@@ -10,7 +10,7 @@ user_routes = Blueprint("user_routes", __name__)
 #
 
 @user_routes.route("/user/courses")
-@student_authenticated_route
+@authenticated_route
 def courses():
     print("USER COURSES...")
     current_user = session.get("current_user")
@@ -70,7 +70,7 @@ def create_order():
 #
 
 @user_routes.route("/user/profile")
-@student_authenticated_route
+@authenticated_route
 def profile():
     print("USER PROFILE...")
     current_user = session.get("current_user")

@@ -97,28 +97,107 @@ class SpreadsheetService:
             self.set_active_document(course_document_id_list[0])
 
         # now, get the assignments from the sheet
+        assignment_sheet = self.get_sheet("ASSIGNMENT_MASTER")
+        assignments = assignment_sheet.get_all_records()
+
+
+        #get student_grade
+        gradebook_sheet = self.get_sheet("GRADEBOOK")
+        all_grades = gradebook_sheet.get_all_records()
+        student_grades = [g for g in all_grades if g.get("Email") == student_email]
+
+        if len(student_grades) == 0:
+            raise Exception("Student Grades not found in gradebook!")
+        
+        student_grades = student_grades[0]
+
+        #merge student grades in with 
+        for a in assignments:
+            assignment_name = a.get("NAME")
+            a['GRADE'] = self.to_pct(student_grades[assignment_name]/a['POINTS'])
+
+        return assignments
+
+    def get_assignment_details(self, student_email:str, course_id:str, assignment_id:str) -> dict:
+        if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
+            courses_sheet = self.get_sheet("courses")
+            courses_records = courses_sheet.get_all_records()
+        
+            course_document_id_list = [c["SHEETS_DOCUMENT_ID"] for c in courses_records if c["COURSE_ID"] == int(course_id)]
+
+            if len(course_document_id_list) == 0:
+                raise Exception("course not found...")
+                #TODO: handle within the route
+            if len(course_document_id_list) > 1:
+                raise Exception("course duplicate found...error")
+                #TODO: handle within the route
+            
+            self.set_active_document(course_document_id_list[0])
+
         assignments_sheet = self.get_sheet("ASSIGNMENT_MASTER")
-        assignments_records = assignments_sheet.get_all_records()
+        assignments = assignments_sheet.get_all_records()
+        assignment_details = [a for a in assignments if a.get('SHEET_NAME') == assignment_id]
+
+        if len(assignment_details) == 0:
+            raise Exception("assignment sheet with id not found!")
+        
+        assignment_details = assignment_details[0]
+
+
+        assignment_sheet = self.get_sheet(assignment_id)
+        assignment_values = assignment_sheet.get_all_values()
+
+        #fetch the student data
+        row = 0
+        header_row = []
+        student_row = []
+        for r in assignment_values:
+            if "Email Address" in r:
+                header_row = r
+            elif student_email in r:
+                student_row = r
+            row += 1
+
+            if header_row != [] and student_row != []:
+                break
 
         
-        #assign the student email to the sheet that calculates scores...
-        scores_sheet = self.get_sheet("STUDENT_SCORES")
-        scores_sheet.update_acell("K2", student_email)
+        if header_row == [] or student_row == []:
+            raise Exception("Error! Header row or student row not found.")
 
-        #find the assignment scores...
-        for i in range(len(assignments_records)):
-            del assignments_records[i]["SHEET_NAME"]
-            assignments_records[i]["GRADE"] = self.to_pct(scores_sheet.cell(i + 2, 9).value)
+        on_time_index = -1
+        raw_score_index = -1
+        for i in range(len(header_row)):
+            if header_row[i] == "ON TIME":
+                on_time_index = i
+            elif header_row[i] == "RAW SCORE":
+                raw_score_index = i
 
-        #clear the email
-        scores_sheet.update_acell("K2", "")
+            if on_time_index > 0 and raw_score_index > 0:
+                break
+
+        assignments_list = []
+        i = on_time_index
+        while i <= raw_score_index:
+            if i == raw_score_index:
+                assignment_details['RAW_SCORE'] = self.to_pct(float(student_row[i]))
+                break
+            assignments_list.append({
+                    "metric": header_row[i],
+                    "score": student_row[i],
+                    "comments": student_row[i+1],
+            })
+            i += 2
+
+        assignment_details["DETAILS"] = assignments_list
+
+        return assignment_details
+            
         
-        return assignments_records
-
 
 
 if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_course_assignments("st4505@nyu.edu", "12345")
+    ss.get_assignment_details("st4505@nyu.edu", "12345", "groceries-mjr")

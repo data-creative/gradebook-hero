@@ -51,7 +51,7 @@ def google_oauth_callback():
         #>     'iat': __________,
         #>     'exp': __________
         #> }
-        print("USER INFO:", user_info["email"], user_info["name"], user_info["locale"])
+        print("USER INFO:", user_info["email"], user_info["name"], user_info.get("locale"))
 
         # add user info to the session
         session["current_user"] = user_info

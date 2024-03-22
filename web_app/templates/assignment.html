@@ -1,0 +1,41 @@
+{% extends "bootstrap_5_layout.html" %}
+{% set active_page = "assignment" %}
+
+{% block content %}
+
+    <h1>Assignment: {{assignment_details.NAME}}</h1>
+    <h3>Due: {{assignment_details.DUE_DATE}}</h3>
+    <hr>
+    <table class="table table-hover text-center">
+        <thead>
+            <tr>
+                <th scope="col">Metric</th>
+                <th scope="col">Score</th>
+                <th scope="col">Comments</th>
+            </tr>
+            <tbody>
+                {% for a in assignment_details.DETAILS %}
+                <tr>
+                    <td>
+                        {{ a.metric }}
+                    </td>
+                    <td>
+                        {{ a.score }}
+                    </td>
+                    <td>
+                        {{ a.comments }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </thead>
+    </table>
+    <hr>
+    <h4>
+        Score: {{assignment_details.RAW_SCORE}}
+    </h4>
+    <p>
+        Points: {{assignment_details.POINTS}}
+    </p>
+
+{% endblock %}
