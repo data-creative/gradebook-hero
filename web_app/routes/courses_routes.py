@@ -27,6 +27,6 @@ def assignment(course_id, assignment_id):
     email = "st4505@nyu.edu"
     #######################
 
-    assignment_details = ss.get_assignment_details(email, course_id, assignment_id)
+    assignment_details, mean, perc25, perc75 = ss.get_assignment_details(email, course_id, assignment_id)
 
-    return render_template("assignment.html", assignment_details=assignment_details)
+    return render_template("assignment.html", assignment_details=assignment_details, mean=mean, perc25=perc25, perc75=perc75)

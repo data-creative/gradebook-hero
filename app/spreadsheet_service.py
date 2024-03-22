@@ -15,6 +15,7 @@ import gspread
 from gspread.exceptions import SpreadsheetNotFound
 
 import time
+import numpy as np
 
 
 load_dotenv()
@@ -114,7 +115,10 @@ class SpreadsheetService:
         #merge student grades in with 
         for a in assignments:
             assignment_name = a.get("NAME")
-            a['GRADE'] = self.to_pct(student_grades[assignment_name]/a['POINTS'])
+            try:
+                a['GRADE'] = self.to_pct(student_grades.get(assignment_name)/a.get("POINTS"))
+            except TypeError as e:
+                a['GRADE'] = '0.00%'
 
         return assignments
 
@@ -191,8 +195,28 @@ class SpreadsheetService:
 
         assignment_details["DETAILS"] = assignments_list
 
-        return assignment_details
-            
+        #now get the avg and stdev
+        all_scores = []
+        raw_score_found = False
+        for row in assignment_values:
+            raw_score = row[raw_score_index]
+
+            if raw_score == "RAW SCORE":
+                raw_score_found = True
+            elif raw_score_found and (isinstance(raw_score, float) or isinstance(raw_score, int)):
+                all_scores.append(float(raw_score))
+            elif raw_score_found and raw_score == "":
+                break
+
+        
+        all_scores = np.array(all_scores)
+        scores_mean = all_scores.mean()
+        scores_25percentile = np.percentile(all_scores, 25)
+        scores_75percentile = np.percentile(all_scores, 75)
+
+
+
+        return assignment_details, scores_mean, scores_25percentile, scores_75percentile
         
 
 
@@ -200,4 +224,4 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_assignment_details("st4505@nyu.edu", "12345", "groceries-mjr")
+    ss.get_assignment_details("st4505@nyu.edu", "12345", "stocks-mjr")

@@ -18,7 +18,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY", default="super secret") # IMPORTANT: override in production
 
-APP_TITLE = "My App"
+APP_TITLE = "Gradebook Hero"
 
 # https://icons.getbootstrap.com/
 NAV_ICON_CLASS = "bi-globe"
