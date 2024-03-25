@@ -195,6 +195,9 @@ class SpreadsheetService:
 
         assignment_details["DETAILS"] = assignments_list
 
+        ###NOTE: SCORE_COLS with column indices of scores
+        ###NOTE: COMMENT_COLS
+
         #now get the avg and stdev
         all_scores = []
         raw_score_found = False
@@ -211,8 +214,10 @@ class SpreadsheetService:
         
         all_scores = np.array(all_scores)
         scores_mean = all_scores.mean()
-        scores_25percentile = np.percentile(all_scores, 25)
-        scores_75percentile = np.percentile(all_scores, 75)
+        scores_25percentile = .75 #CHANGE
+        scores_75percentile = .9 #CHANGE
+        #scores_25percentile = np.percentile(all_scores, 25)
+        #scores_75percentile = np.percentile(all_scores, 75)
 
 
 
