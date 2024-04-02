@@ -19,3 +19,5 @@ gunicorn
 
 # testing:
 pytest
+
+numpy
