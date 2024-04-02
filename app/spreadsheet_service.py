@@ -76,6 +76,8 @@ class SpreadsheetService:
 
         student_courses_info = [course_info for course_info in all_courses if course_info["COURSE_ID"] in student_course_ids]
 
+        print(student_courses_info)
+
         return student_courses_info
 
 
@@ -122,7 +124,20 @@ class SpreadsheetService:
 
         return assignments
 
-    def get_assignment_details(self, student_email:str, course_id:str, assignment_id:str) -> dict:
+
+    @staticmethod
+    def excel_column_to_number(column):
+        """
+        HELPER METHOD FOR get_assignment_scores
+        Converts an Excel column letter (e.g., 'A', 'Z', 'AA') into its corresponding
+        column number (e.g., 1, 26, 27).
+        """
+        number = 0
+        for char in column.upper():  # Ensure uppercase for consistency
+            number = number * 26 + (ord(char) - ord('A') + 1)
+        return number - 1
+
+    def get_assignment_scores(self, student_email:str, course_id:str, assignment_id:str) -> dict:
         if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
             courses_sheet = self.get_sheet("courses")
             courses_records = courses_sheet.get_all_records()
@@ -138,95 +153,85 @@ class SpreadsheetService:
             
             self.set_active_document(course_document_id_list[0])
 
+
+        #fetch details about the assignment
         assignments_sheet = self.get_sheet("ASSIGNMENT_MASTER")
         assignments = assignments_sheet.get_all_records()
         assignment_details = [a for a in assignments if a.get('SHEET_NAME') == assignment_id]
 
         if len(assignment_details) == 0:
             raise Exception("assignment sheet with id not found!")
-        
         assignment_details = assignment_details[0]
 
-
+        header_row = assignment_details.get("HEADER_ROW")
         assignment_sheet = self.get_sheet(assignment_id)
-        assignment_values = assignment_sheet.get_all_values()
 
-        #fetch the student data
-        row = 0
-        header_row = []
-        student_row = []
-        for r in assignment_values:
-            if "Email Address" in r:
-                header_row = r
-            elif student_email in r:
-                student_row = r
-            row += 1
+        #get student's grades on the assignment
+        assignment_records = assignment_sheet.get_all_records(head=header_row)
+        student_assignment_row = [a for a in assignment_records if a.get('Email Address') == student_email]
 
-            if header_row != [] and student_row != []:
-                break
-
+        if len(student_assignment_row) == 0:
+            raise Exception("Assignment details for student not found!")
         
-        if header_row == [] or student_row == []:
-            raise Exception("Error! Header row or student row not found.")
+        student_assignment_row = student_assignment_row[0]
 
-        on_time_index = -1
-        raw_score_index = -1
-        for i in range(len(header_row)):
-            if header_row[i] == "ON TIME":
-                on_time_index = i
-            elif header_row[i] == "RAW SCORE":
-                raw_score_index = i
+        #transform the student data into friendly format
+        scores_to_return = []
+        if assignment_details.get('SCORE_COLUMNS') != '':
+            assignment_score_cols = assignment_details.get('SCORE_COLUMNS').split(',')
+            assignment_score_col_indices = [self.excel_column_to_number(c) for c in assignment_score_cols]
+            assignment_score_col_headers = [list(student_assignment_row.keys())[i] for i in assignment_score_col_indices]
 
-            if on_time_index > 0 and raw_score_index > 0:
-                break
+            assignment_comment_cols = assignment_details.get('COMMENT_COLUMNS').split(',')
+            assignment_comment_col_indices = [self.excel_column_to_number(c) for c in assignment_comment_cols]
+            assignment_comment_col_headers = [list(student_assignment_row.keys())[i] for i in assignment_comment_col_indices]
 
-        assignments_list = []
-        i = on_time_index
-        while i <= raw_score_index:
-            if i == raw_score_index:
-                assignment_details['RAW_SCORE'] = self.to_pct(float(student_row[i]))
-                break
-            assignments_list.append({
-                    "metric": header_row[i],
-                    "score": student_row[i],
-                    "comments": student_row[i+1],
-            })
-            i += 2
+            scores_to_return = []
+            for score_header, comment_header in zip(assignment_score_col_headers, assignment_comment_col_headers):
+                metric = score_header
+                score = student_assignment_row[score_header]
+                comments = student_assignment_row[comment_header]
 
-        assignment_details["DETAILS"] = assignments_list
+                scores_to_return.append({'metric': metric, 'score': score, 'comments': comments})
 
-        ###NOTE: SCORE_COLS with column indices of scores
-        ###NOTE: COMMENT_COLS
+        #get student final score
+        final_grade_col_index = assignment_details.get('FINAL_GRADE_COLUMN_INDEX') #we have this as a number in the sheet...
+        final_grade_col_header = list(student_assignment_row.keys())[final_grade_col_index]
 
-        #now get the avg and stdev
-        all_scores = []
-        raw_score_found = False
-        for row in assignment_values:
-            raw_score = row[raw_score_index]
+        student_final_grade = student_assignment_row.get(final_grade_col_header)
 
-            if raw_score == "RAW SCORE":
-                raw_score_found = True
-            elif raw_score_found and (isinstance(raw_score, float) or isinstance(raw_score, int)):
-                all_scores.append(float(raw_score))
-            elif raw_score_found and raw_score == "":
-                break
 
+        #get average, stdev, etc from data
+        all_student_scores = [r.get(final_grade_col_header) for r in assignment_records]
+        all_student_scores = [s if isinstance(s, int) or isinstance(s, float) else 0 for s in all_student_scores]
+        all_student_scores = np.array(all_student_scores)
+
+        class_mean = round(all_student_scores.mean(),2)
+        class_upper_quartile = np.percentile(all_student_scores, 75)
+        class_lower_quartile = np.percentile(all_student_scores, 25)
+
+        #transform all assignment data into website-readable format
+        details_to_return = {
+            "NAME": assignment_details.get('NAME'),
+            "ASSIGNMENT_POINTS": assignment_details.get('POINTS'),
+            "FINAL_SCORE": student_final_grade,
+            "DUE_DATE": assignment_details.get('DUE_DATE'),
+            "CLASS_MEAN": class_mean,
+            "CLASS_UPPER_QUARTILE": class_upper_quartile,
+            "CLASS_LOWER_QUARTILE": class_lower_quartile,
+            "STUDENT_DETAILS": scores_to_return
+        }
+
+        return details_to_return
         
-        all_scores = np.array(all_scores)
-        scores_mean = all_scores.mean()
-        scores_25percentile = .75 #CHANGE
-        scores_75percentile = .9 #CHANGE
-        #scores_25percentile = np.percentile(all_scores, 25)
-        #scores_75percentile = np.percentile(all_scores, 75)
 
 
-
-        return assignment_details, scores_mean, scores_25percentile, scores_75percentile
-        
 
 
 if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_assignment_details("st4505@nyu.edu", "12345", "stocks-mjr")
+    #ss.get_student_courses("st4505@nyu.edu")
+
+    ss.get_assignment_scores("st4505@nyu.edu", "12345", "onboarding")

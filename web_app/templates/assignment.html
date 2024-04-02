@@ -6,41 +6,41 @@
     <h1>Assignment: {{assignment_details.NAME}}</h1>
     <h3>Due: {{assignment_details.DUE_DATE}}</h3>
     <hr>
-    <table class="table table-hover text-center">
-        <thead>
-            <tr>
-                <th scope="col">Metric</th>
-                <th scope="col">Score</th>
-                <th scope="col">Comments</th>
-            </tr>
-            <tbody>
-                {% for a in assignment_details.DETAILS %}
+
+    {% if assignment_details.STUDENT_DETAILS is defined and assignment_details.STUDENT_DETAILS|length > 0 %}
+        <table class="table table-hover text-center">
+            <thead>
                 <tr>
-                    <td>
-                        {{ a.metric }}
-                    </td>
-                    <td>
-                        {{ a.score }}
-                    </td>
-                    <td>
-                        {{ a.comments }}
-                    </td>
+                    <th scope="col">Metric</th>
+                    <th scope="col">Score</th>
+                    <th scope="col">Comments</th>
                 </tr>
-                {% endfor %}
-            </tbody>
-        </thead>
-    </table>
-    <hr>
+                <tbody>
+                    {% for a in assignment_details.STUDENT_DETAILS %}
+                    <tr>
+                        <td>
+                            {{ a.metric }}
+                        </td>
+                        <td>
+                            {{ a.score }}
+                        </td>
+                        <td>
+                            {{ a.comments }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </thead>
+        </table>
+    <hr/>
+    {% endif %}
     <h4>
-        Score: {{assignment_details.RAW_SCORE}}
+        Score: {{assignment_details.FINAL_SCORE}} / {{assignment_details.ASSIGNMENT_POINTS}}
     </h4>
-    <p>
-        Points: {{assignment_details.POINTS}}
-    </p>
     <hr>
     <h3>DETAILS:</h3>
-    <p>Mean: {{ mean }}</p>
-    <p>25th Percentile: {{ perc25 }}</p>
-    <p>75th Percentile: {{ perc75 }}</p>
+    <p>Mean: {{ assignment_details.CLASS_MEAN }}</p>
+    <p>Lower Quartile: {{ assignment_details.CLASS_LOWER_QUARTILE }}</p>
+    <p>Upper Quartile: {{ assignment_details.CLASS_UPPER_QUARTILE }}</p>
 
 {% endblock %}

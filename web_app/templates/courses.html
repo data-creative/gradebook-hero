@@ -14,12 +14,10 @@
             </tr>
             <tbody>
                 {% for c in courses %}
-                <tr>
-                    <a href="/courses/{{c.COURSE_ID}}">
-                        <td>
-                            {{ c.DEPARTMENT }}-{{ c.NUMBER }}: {{ c.COURSE_NAME }}
-                        </td>
-                    </a>
+                <tr class="clickable-row"  data-href="/courses/{{ c.COURSE_ID }}">
+                    <td>
+                        {{ c.DEPARTMENT }}-{{ c.NUMBER }}: {{ c.COURSE_NAME }}
+                    </td>
                     <td>
                         {{ c.TERM }}
                     </td>
@@ -32,4 +30,13 @@
         </thead>
     </table>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            document.querySelectorAll('.clickable-row').forEach(row => {
+                row.addEventListener('click', function() {
+                    window.location.href = this.dataset.href;
+                });
+            });
+        });
+        </script>
 {% endblock %}
