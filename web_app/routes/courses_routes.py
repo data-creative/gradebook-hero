@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, flash, redirect, current_app, url_
 
 courses_routes = Blueprint("courses_routes", __name__)
 
-from web_app.routes.wrappers import authenticated_route
+from web_app.routes.wrappers import authenticated_route, student_route, teacher_route
 
 @courses_routes.route("/courses/<course_id>")
 @authenticated_route
@@ -15,8 +15,10 @@ def course(course_id):
     assignments_list = ss.get_course_assignments("st4505@nyu.edu", course_id)
     return render_template("assignments.html", assignments=assignments_list, course_id=course_id)
 
+
 @courses_routes.route("/courses/<course_id>/assignments/<assignment_id>")
 @authenticated_route
+@student_route
 def assignment(course_id, assignment_id):
     print(f"COURSE {course_id}: ASSIGNMENT {assignment_id}")
     ss = current_app.config["SPREADSHEET_SERVICE"]

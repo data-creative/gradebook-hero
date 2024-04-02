@@ -67,9 +67,9 @@ class SpreadsheetService:
 
     def get_student_courses(self, email:str) -> list:
         self.set_active_document(GOOGLE_SHEETS_MASTER_DOCUMENT_ID)
-        students_sheet = self.get_sheet("students_roster")
+        students_sheet = self.get_sheet("roster")
         all_student_course_ids = students_sheet.get_all_records()
-        student_course_ids = [course["COURSE_ID"] for course in all_student_course_ids if course["STUDENT_EMAIL"] == email]
+        student_course_ids = [course["COURSE_ID"] for course in all_student_course_ids if course["EMAIL"] == email and course["USER_TYPE"] == "student"]
         
         courses_sheet = self.get_sheet("courses")
         all_courses = courses_sheet.get_all_records()
@@ -179,11 +179,11 @@ class SpreadsheetService:
         scores_to_return = []
         if assignment_details.get('SCORE_COLUMNS') != '':
             assignment_score_cols = assignment_details.get('SCORE_COLUMNS').split(',')
-            assignment_score_col_indices = [self.excel_column_to_number(c) for c in assignment_score_cols]
+            assignment_score_col_indices = [SpreadsheetService.excel_column_to_number(c) for c in assignment_score_cols]
             assignment_score_col_headers = [list(student_assignment_row.keys())[i] for i in assignment_score_col_indices]
 
             assignment_comment_cols = assignment_details.get('COMMENT_COLUMNS').split(',')
-            assignment_comment_col_indices = [self.excel_column_to_number(c) for c in assignment_comment_cols]
+            assignment_comment_col_indices = [SpreadsheetService.excel_column_to_number(c) for c in assignment_comment_cols]
             assignment_comment_col_headers = [list(student_assignment_row.keys())[i] for i in assignment_comment_col_indices]
 
             scores_to_return = []
@@ -223,9 +223,31 @@ class SpreadsheetService:
         }
 
         return details_to_return
-        
+    
 
 
+    #####################
+    #   AUTH FUNCTIONS  #
+    #####################
+
+    def check_user_type(self, email:str) -> str:
+        """
+        this security is SO BAD and needs to be improved
+        but it'll work for now...
+        """
+        self.set_active_document(GOOGLE_SHEETS_MASTER_DOCUMENT_ID)
+        students_sheet = self.get_sheet("roster")
+        all_records = students_sheet.get_all_records()
+        courses_list = [row for row in all_records if row["EMAIL"] == email]
+
+        if len(courses_list) == 0:
+            return "user"
+        elif courses_list[0].get('USER_TYPE').lower() == "student":
+            return "student"
+        elif courses_list[0].get('USER_TYPE').lower() == "teacher":
+            return "teacher"
+        else:
+            return "unknown" #TODO: need a better catch here...
 
 
 if __name__ == "__main__":

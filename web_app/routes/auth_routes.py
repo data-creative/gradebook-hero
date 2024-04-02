@@ -67,6 +67,8 @@ def google_oauth_callback():
         #    "locale": user_info["locale"],
         #})
 
+        session["user_type"] = get_user_type(user_info["email"])
+
     else:
         print("NO USER INFO")
     return redirect("/")
@@ -77,6 +79,10 @@ def logout():
     session.pop("current_user", None) # remove user info from the session
     return redirect("/")
 
+
+def get_user_type(email:str) -> str:
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    return ss.check_user_type(email=email)
 #
 # EMAIL / PASSWORD AUTH (NOT IMPLEMENTED)
 #

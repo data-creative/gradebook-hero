@@ -22,3 +22,29 @@ def authenticated_route(view):
             flash("Unauthenticated. Please login!", "warning")
             return redirect("/login")
     return wrapped_view
+
+def student_route(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session.get("user_type") == "student": #this security is so weak haha
+            #print("CURRENT USER:", session["current_user"])
+            return view(**kwargs)
+        else:
+            print("UNAUTHENTICATED...")
+            flash("Unauthenticated!", "warning")
+            return redirect("/")
+        
+    return wrapped_view
+
+def teacher_route(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session.get("user_type") == "teacher": #this security is so weak haha
+            #print("CURRENT USER:", session["current_user"])
+            return view(**kwargs)
+        else:
+            print("UNAUTHENTICATED...")
+            flash("Unauthenticated!", "warning")
+            return redirect("/")
+        
+    return wrapped_view
