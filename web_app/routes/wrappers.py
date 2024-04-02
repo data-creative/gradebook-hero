@@ -26,7 +26,8 @@ def authenticated_route(view):
 def student_route(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if session.get("user_type") == "student": #this security is so weak haha
+        current_user = session.get("current_user")
+        if current_user.get("user_type") == "student": #this security is so weak haha
             #print("CURRENT USER:", session["current_user"])
             return view(**kwargs)
         else:
@@ -39,7 +40,8 @@ def student_route(view):
 def teacher_route(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if session.get("user_type") == "teacher": #this security is so weak haha
+        current_user = session.get("current_user")
+        if current_user.get("user_type") == "teacher": #this security is so weak haha
             #print("CURRENT USER:", session["current_user"])
             return view(**kwargs)
         else:

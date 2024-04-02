@@ -1,0 +1,47 @@
+{% extends "bootstrap_5_layout.html" %}
+{% set active_page = "assignments" %}
+
+{% block content %}
+
+    <h1>Course Roster</h1>
+
+    <table class="table table-hover text-center">
+        <thead>
+            <tr>
+                <th scope="col">Last</th>
+                <th scope="col">First</th>
+                <th scope="col">Email</th>
+                <th scope="col">Current Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in roster_data %}
+            <tr class="clickable-row" data-href="/courses/{{ course_id }}/student/{{ d.Email }}">
+                <td>
+                    {{ d.Last }}
+                </td>
+                <td>
+                    {{ d.First }}
+                </td>
+                <td>
+                    {{ d.Email }}
+                </td>
+                <td>
+                    {{ d.TOTAL }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <script>
+    document.addEventListener("DOMContentLoaded", function(){
+        document.querySelectorAll('.clickable-row').forEach(row => {
+            row.addEventListener('click', function() {
+                window.location.href = this.dataset.href;
+            });
+        });
+    });
+    </script>
+
+{% endblock %}

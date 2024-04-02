@@ -15,8 +15,11 @@ def courses():
     print("USER COURSES...")
     current_user = session.get("current_user")
     ss = current_app.config["SPREADSHEET_SERVICE"]
+
+    email = current_user["email"]
+    email = "mjrossetti@georgetown.edu"
     
-    courses = ss.get_student_courses(current_user["email"])
+    courses = ss.get_courses(email)
 
     return render_template("courses.html", courses=courses)
 

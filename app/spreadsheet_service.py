@@ -65,11 +65,11 @@ class SpreadsheetService:
     # COURSES FUNCTIONS #
     #####################
 
-    def get_student_courses(self, email:str) -> list:
+    def get_courses(self, email:str) -> list:
         self.set_active_document(GOOGLE_SHEETS_MASTER_DOCUMENT_ID)
         students_sheet = self.get_sheet("roster")
         all_student_course_ids = students_sheet.get_all_records()
-        student_course_ids = [course["COURSE_ID"] for course in all_student_course_ids if course["EMAIL"] == email and course["USER_TYPE"] == "student"]
+        student_course_ids = [course["COURSE_ID"] for course in all_student_course_ids if course["EMAIL"] == email]
         
         courses_sheet = self.get_sheet("courses")
         all_courses = courses_sheet.get_all_records()
@@ -123,6 +123,28 @@ class SpreadsheetService:
                 a['GRADE'] = '0.00%'
 
         return assignments
+    
+    def get_course_roster(self, course_id:str):
+        if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
+            courses_sheet = self.get_sheet("courses")
+            courses_records = courses_sheet.get_all_records()
+        
+            course_document_id_list = [c["SHEETS_DOCUMENT_ID"] for c in courses_records if c["COURSE_ID"] == int(course_id)]
+
+            if len(course_document_id_list) == 0:
+                raise Exception("course not found...")
+                #TODO: handle within the route
+            if len(course_document_id_list) > 1:
+                raise Exception("course duplicate found...error")
+                #TODO: handle within the route
+            
+            self.set_active_document(course_document_id_list[0])
+
+          #get student_grade
+        gradebook_sheet = self.get_sheet("GRADEBOOK")
+        all_grades = gradebook_sheet.get_all_records()
+        
+        return all_grades
 
 
     @staticmethod

@@ -12,7 +12,15 @@ def course(course_id):
     current_user = session.get("current_user")
     email = current_user["email"]
     #TODO: change hard coded email to "email" fetched from session
-    assignments_list = ss.get_course_assignments("st4505@nyu.edu", course_id)
+    email = "st4505@nyu.edu"
+    ##################################
+
+    if current_user.get('user_type') == "student":
+        assignments_list = ss.get_course_assignments(email, course_id)
+        return render_template("assignments.html", assignments=assignments_list, course_id=course_id)
+    elif current_user.get('user_type') == "teacher":
+        roster_data = ss.get_course_roster(course_id)
+        return render_template("course_roster.html", roster_data=roster_data)
     return render_template("assignments.html", assignments=assignments_list, course_id=course_id)
 
 

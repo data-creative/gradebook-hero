@@ -51,7 +51,6 @@ def google_oauth_callback():
         #>     'iat': __________,
         #>     'exp': __________
         #> }
-        print("USER INFO:", user_info["email"], user_info["name"], user_info.get("locale"))
 
         # add user info to the session
         session["current_user"] = user_info
@@ -67,7 +66,10 @@ def google_oauth_callback():
         #    "locale": user_info["locale"],
         #})
 
-        session["user_type"] = get_user_type(user_info["email"])
+        session['current_user']["user_type"] = get_user_type(user_info["email"])
+
+        print(f"{session['current_user']['email']} is a {session['current_user']['user_type']}")
+
 
     else:
         print("NO USER INFO")
