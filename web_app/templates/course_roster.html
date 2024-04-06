@@ -40,6 +40,12 @@
             row.addEventListener('click', function() {
                 window.location.href = this.dataset.href;
             });
+            row.addEventListener('mouseover', function() {
+                this.style.cursor = 'pointer';
+            });
+            row.addEventListener('mouseout', function() {
+                this.style.cursor = '';
+            });
         });
     });
     </script>
