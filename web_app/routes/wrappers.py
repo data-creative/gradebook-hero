@@ -1,6 +1,14 @@
 
 import functools
-from flask import session, redirect, flash
+from flask import session, redirect, flash, request
+
+STATUS_DICT = {
+    "USER": 1,
+    "STUDENT": 2,
+    "TA": 3,
+    "TEACHER": 4,
+    "ADMIN": 5
+}
 
 def authenticated_route(view):
     """
@@ -23,30 +31,104 @@ def authenticated_route(view):
             return redirect("/login")
     return wrapped_view
 
-def student_route(view):
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        current_user = session.get("current_user")
-        if current_user.get("user_type") == "student": #this security is so weak haha
-            #print("CURRENT USER:", session["current_user"])
-            return view(**kwargs)
-        else:
-            print("UNAUTHENTICATED...")
-            flash("Unauthenticated!", "warning")
-            return redirect("/")
-        
-    return wrapped_view
+def student_route():
+    def decorator(view):
+        @functools.wraps(view)
+        def wrapped_view(**kwargs):
+            course_id = kwargs.get('course_id', request.view_args.get('course_id'))
+            current_user = session.get("current_user")
+            if not current_user:
+                return redirect ("/login")
+            
+            user_courses = current_user.get('user_courses')
 
-def teacher_route(view):
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        current_user = session.get("current_user")
-        if current_user.get("user_type") == "teacher": #this security is so weak haha
-            #print("CURRENT USER:", session["current_user"])
-            return view(**kwargs)
-        else:
-            print("UNAUTHENTICATED...")
-            flash("Unauthenticated!", "warning")
-            return redirect("/")
-        
-    return wrapped_view
+            if not user_courses:
+                print("USER COURSES:")
+                print(user_courses)
+                print("ERROR...")
+                flash("ERROR! We could not find this assignment.", "warning")
+                return redirect("/user/courses")
+            
+            course_status_list = [c for c in user_courses if int(c.get('COURSE_ID')) == int(course_id)]
+            
+            if len(course_status_list) == 0:
+                return redirect("/user/courses") #user not in course
+            
+            course_status = course_status_list[0].get('USER_TYPE')
+
+            if STATUS_DICT.get(course_status) >= STATUS_DICT.get("STUDENT"):
+                return view(**kwargs)
+            else:
+                print("UNAUTHENTICATED...")
+                flash("Unauthenticated! You are not allowed to access this page.", "warning")
+                return redirect("/user/courses")
+        return wrapped_view
+    return decorator
+
+def ta_route():
+    def decorator(view):
+        @functools.wraps(view)
+        def wrapped_view(**kwargs):
+            course_id = kwargs.get('course_id', request.view_args.get('course_id'))
+            current_user = session.get("current_user")
+            if not current_user:
+                return redirect ("/login")
+            
+            user_courses = current_user.get('user_courses')
+
+            if not user_courses:
+                print("USER COURSES:")
+                print(user_courses)
+                print("ERROR...")
+                flash("ERROR! We could not find this assignment.", "warning")
+                return redirect("/user/courses")
+            
+            course_status_list = [c for c in user_courses if int(c.get('COURSE_ID')) == int(course_id)]
+            
+            if len(course_status_list) == 0:
+                return redirect("/user/courses") #user not in course
+            
+            course_status = course_status_list[0].get('USER_TYPE')
+
+            if STATUS_DICT.get(course_status) >= STATUS_DICT.get("TA"):
+                return view(**kwargs)
+            else:
+                print("UNAUTHENTICATED...")
+                flash("Unauthenticated! You are not allowed to access this page.", "warning")
+                return redirect("/user/courses")
+        return wrapped_view
+    return decorator
+
+def teacher_route():
+    def decorator(view):
+        @functools.wraps(view)
+        def wrapped_view(**kwargs):
+            course_id = kwargs.get('course_id', request.view_args.get('course_id'))
+            current_user = session.get("current_user")
+            if not current_user:
+                return redirect ("/login")
+            
+            user_courses = current_user.get('user_courses')
+
+            if not user_courses:
+                print("USER COURSES:")
+                print(user_courses)
+                print("ERROR...")
+                flash("ERROR! We could not find this assignment.", "warning")
+                return redirect("/user/courses")
+            
+            course_status_list = [c for c in user_courses if int(c.get('COURSE_ID')) == int(course_id)]
+            
+            if len(course_status_list) == 0:
+                return redirect("/user/courses") #user not in course
+            
+            course_status = course_status_list[0].get('USER_TYPE')
+
+            if STATUS_DICT.get(course_status) >= STATUS_DICT.get("TEACHER"):
+                return view(**kwargs)
+            else:
+                print("UNAUTHENTICATED...")
+                flash("Unauthenticated! You are not allowed to access this page.", "warning")
+                return redirect("/user/courses")
+        return wrapped_view
+    return decorator

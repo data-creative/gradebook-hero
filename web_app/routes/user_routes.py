@@ -17,9 +17,9 @@ def courses():
     ss = current_app.config["SPREADSHEET_SERVICE"]
 
     email = current_user["email"]
-    email = "mjrossetti@georgetown.edu"
     
     courses = ss.get_courses(email)
+    print(courses)
 
     return render_template("courses.html", courses=courses)
 

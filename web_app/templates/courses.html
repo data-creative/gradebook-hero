@@ -11,6 +11,7 @@
                 <th scope="col">Course</th>
                 <th scope="col">Term</th>
                 <th scope="col">Professor</th>
+                <th scope="col">Role</th>
             </tr>
             <tbody>
                 {% for c in courses %}
@@ -23,6 +24,9 @@
                     </td>
                     <td>
                         {{ c.PROFESSOR }}
+                    </td>
+                    <td>
+                        {{ c.USER_TYPE }}
                     </td>
                 </tr>
                 {% endfor %}

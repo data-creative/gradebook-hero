@@ -67,18 +67,28 @@ class SpreadsheetService:
 
     def get_courses(self, email:str) -> list:
         self.set_active_document(GOOGLE_SHEETS_MASTER_DOCUMENT_ID)
-        students_sheet = self.get_sheet("roster")
-        all_student_course_ids = students_sheet.get_all_records()
-        student_course_ids = [course["COURSE_ID"] for course in all_student_course_ids if course["EMAIL"] == email]
+        roster_sheet = self.get_sheet("roster")
+        all_course_ids = roster_sheet.get_all_records()
+        user_courses = [course_info for course_info in all_course_ids if course_info["EMAIL"] == email]
         
         courses_sheet = self.get_sheet("courses")
         all_courses = courses_sheet.get_all_records()
 
-        student_courses_info = [course_info for course_info in all_courses if course_info["COURSE_ID"] in student_course_ids]
+        for i in range(len(user_courses)):
+            course = user_courses[i]
+            general_course_info = [c for c in all_courses if c.get('COURSE_ID') == course.get('COURSE_ID')]
+            if len(general_course_info) == 0:
+                continue #in case generic info row not created
+            general_course_info = general_course_info[0]
 
-        print(student_courses_info)
+            if general_course_info.get('SHEETS_DOCUMENT_ID'):
+                del general_course_info['SHEETS_DOCUMENT_ID']
+            
+            user_courses[i] = {**course, **general_course_info}
+        
+        print(user_courses)
 
-        return student_courses_info
+        return user_courses
 
 
     def get_course_assignments(self, student_email:str, course_id:str) -> list:
@@ -140,7 +150,6 @@ class SpreadsheetService:
             
             self.set_active_document(course_document_id_list[0])
 
-          #get student_grade
         gradebook_sheet = self.get_sheet("GRADEBOOK")
         all_grades = gradebook_sheet.get_all_records()
         
@@ -252,7 +261,7 @@ class SpreadsheetService:
     #   AUTH FUNCTIONS  #
     #####################
 
-    def check_user_type(self, email:str) -> str:
+    def get_user_courses(self, email:str) -> list:
         """
         this security is SO BAD and needs to be improved
         but it'll work for now...
@@ -262,20 +271,17 @@ class SpreadsheetService:
         all_records = students_sheet.get_all_records()
         courses_list = [row for row in all_records if row["EMAIL"] == email]
 
-        if len(courses_list) == 0:
-            return "user"
-        elif courses_list[0].get('USER_TYPE').lower() == "student":
-            return "student"
-        elif courses_list[0].get('USER_TYPE').lower() == "teacher":
-            return "teacher"
-        else:
-            return "unknown" #TODO: need a better catch here...
+        return courses_list
+
+
 
 
 if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
+    ss.get_courses("cjdelaney02@gmail.com")
+
     #ss.get_student_courses("st4505@nyu.edu")
 
-    ss.get_assignment_scores("st4505@nyu.edu", "12345", "onboarding")
+    #ss.get_assignment_scores("st4505@nyu.edu", "12345", "onboarding")

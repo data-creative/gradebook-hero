@@ -66,9 +66,11 @@ def google_oauth_callback():
         #    "locale": user_info["locale"],
         #})
 
-        session['current_user']["user_type"] = get_user_type(user_info["email"])
+        session['current_user']["user_courses"] = get_user_courses(user_info["email"])
 
-        print(f"{session['current_user']['email']} is a {session['current_user']['user_type']}")
+        print("STORED IN SESSION:")
+        print(session['current_user']['user_courses'])
+
 
 
     else:
@@ -82,9 +84,9 @@ def logout():
     return redirect("/")
 
 
-def get_user_type(email:str) -> str:
+def get_user_courses(email:str) -> str:
     ss = current_app.config["SPREADSHEET_SERVICE"]
-    return ss.check_user_type(email=email)
+    return ss.get_user_courses(email=email)
 #
 # EMAIL / PASSWORD AUTH (NOT IMPLEMENTED)
 #

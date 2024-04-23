@@ -1,0 +1,47 @@
+{% extends "bootstrap_5_layout.html" %}
+{% set active_page = "assignments" %}
+
+{% block content %}
+
+    <h2>Assignments - {{first_name}} {{last_name}}({{student_email}})</h2>
+
+    <table class="table table-hover text-center">
+        <thead>
+            <tr>
+                <th scope="col">Assignment</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Points</th>
+                <th scope="col">Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in assignments %}
+            <tr class="clickable-row" data-href="/courses/{{ course_id }}/assignments/{{ a.SHEET_NAME }}">
+                <td>
+                    {{ a.NAME }}
+                </td>
+                <td>
+                    {{ a.DUE_DATE }}
+                </td>
+                <td>
+                    {{ a.POINTS }}
+                </td>
+                <td>
+                    {{ a.GRADE }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <script>
+    document.addEventListener("DOMContentLoaded", function(){
+        document.querySelectorAll('.clickable-row').forEach(row => {
+            row.addEventListener('click', function() {
+                window.location.href = this.dataset.href;
+            });
+        });
+    });
+    </script>
+
+{% endblock %}
