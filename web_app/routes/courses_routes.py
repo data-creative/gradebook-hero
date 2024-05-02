@@ -102,20 +102,6 @@ def courses_teacher_roster(course_id):
     return render_template("course_roster.html", roster_data=roster_data, course_id=course_id, personal_course_info=courses_info[0])
 
 
-@courses_routes.route("/courses/<course_id>/assignments")
-@authenticated_route
-@ta_route()
-def course_assignments(course_id):
-    ss = current_app.config["SPREADSHEET_SERVICE"]
-    all_assignment_data = ss.get_course_assignments_teacher(course_id)
-
-    current_user = session.get('current_user')
-    courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
-    if len(courses_info) == 0:
-        flash(str(courses_info))
-        return redirect('/user/courses')
-    
-    return render_template("assignments_teacher.html", assignments=all_assignment_data, personal_course_info=courses_info[0])
 
 
 @courses_routes.route("/courses/<course_id>/students/<student_info>")
@@ -133,13 +119,13 @@ def student_grades(course_id, student_info):
 
 @courses_routes.route("/courses/<course_id>/check_ins")
 @authenticated_route
-@ta_route()
-def student_grades(course_id, student_info):
+@student_route()
+def check_ins(course_id):
     ss = current_app.config["SPREADSHEET_SERVICE"]
     current_user = session.get("current_user")
     email = current_user["email"]
     #TODO: change hard coded email to "email" fetched from session
-    email = "st4505@nyu.edu"
+    email = "at2015@nyu.edu"
     ##################################
 
 
@@ -153,5 +139,9 @@ def student_grades(course_id, student_info):
     course_name = courses_info[0].get('COURSE_NAME')
     check_in_sheet_name = courses_info[0].get('CHECK_IN_SHEET_NAME')
 
+    print("-----")
+    print(courses_info[0])
+
     if user_role == "STUDENT":
-        check_in_data = ss.get_weekly_check_ins(course_id=course_id, email=email, user_role=user_role, check_in_sheet_name=check_in_sheet_name)
+        check_in_data, check_in_headers = ss.get_weekly_check_ins(course_id=course_id, email=email, user_role=user_role, check_in_sheet_name=check_in_sheet_name)
+        return render_template("check_ins_student.html", course_id=course_id, course_name=course_name, check_in_data=check_in_data, check_in_headers=check_in_headers)

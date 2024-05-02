@@ -42,8 +42,8 @@ def student_route():
             
             user_courses = current_user.get('user_courses')
 
-            if not user_courses:
-                print("USER COURSES:")
+            if len(user_courses) == 0:
+                print("STUDENT COURSES:")
                 print(user_courses)
                 print("ERROR...")
                 flash("ERROR! We could not find this assignment.", "warning")
@@ -76,8 +76,8 @@ def ta_route():
             
             user_courses = current_user.get('user_courses')
 
-            if not user_courses:
-                print("USER COURSES:")
+            if len(user_courses) == 0:
+                print("TA COURSES:")
                 print(user_courses)
                 print("ERROR...")
                 flash("ERROR! We could not find this assignment.", "warning")
@@ -110,8 +110,8 @@ def teacher_route():
             
             user_courses = current_user.get('user_courses')
 
-            if not user_courses:
-                print("USER COURSES:")
+            if len(user_courses) == 0:
+                print("TEACHER COURSES:")
                 print(user_courses)
                 print("ERROR...")
                 flash("ERROR! We could not find this assignment.", "warning")

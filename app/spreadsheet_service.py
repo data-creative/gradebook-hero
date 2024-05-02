@@ -91,7 +91,6 @@ class SpreadsheetService:
 
         return user_courses
 
-
     def get_course_assignments(self, student_email:str, course_id:str) -> list:
         #if coming from "courses" page, the active document will be "MASTER"
         #we want to change that to the document ID of the specific course
@@ -134,6 +133,7 @@ class SpreadsheetService:
                 a['GRADE'] = '0.00%'
 
         return assignments
+
     
     def get_course_assignments_teacher(self, course_id:str) -> list:
         #if coming from "courses" page, the active document will be "MASTER"
@@ -323,10 +323,10 @@ class SpreadsheetService:
             
             if len(student_check_in_records) > 0:
                 student_records_df = pd.DataFrame(student_check_in_records)
-                student_records_df.drop(['Timestamp', 'Email Address'])
+                student_records_df.drop(columns=['Timestamp', 'Email Address'], inplace=True)
                 df_keys = list(student_records_df.columns.values)
 
-                return student_records_df.to_dict(), df_keys
+                return student_records_df.to_dict(orient='records'), df_keys
                 
             else:
                 #NO CHECK IN RECORDS FOUND
@@ -334,7 +334,7 @@ class SpreadsheetService:
         elif user_role == "TEACHER" or user_role == "TA":
             all_records_df = pd.DataFrame(check_in_records)
             mean_values = all_records_df.select_dtypes(include=['number']).groupby(all_records_df['Week Number']).mean()
-            return mean_values
+            return mean_values.to_dict(orient='records')
 
 
             
@@ -369,6 +369,8 @@ class SpreadsheetService:
             c['DEPARTMENT'] = course_info['DEPARTMENT']
             c['NUMBER'] = course_info['NUMBER']
             c['COURSE_NAME'] = course_info['COURSE_NAME']
+            c['CHECK_IN_SHEET_NAME'] = course_info['CHECK_IN_SHEET_NAME']
+            c['CHECK_IN_FORM_ID'] = course_info['CHECK_IN_FORM_ID']
 
         return courses_list
 
