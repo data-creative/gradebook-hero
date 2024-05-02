@@ -135,6 +135,45 @@ class SpreadsheetService:
 
         return assignments
     
+    def get_course_assignments_teacher(self, course_id:str) -> list:
+        #if coming from "courses" page, the active document will be "MASTER"
+        #we want to change that to the document ID of the specific course
+        if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
+            courses_sheet = self.get_sheet("courses")
+            courses_records = courses_sheet.get_all_records()
+        
+            course_document_id_list = [c["SHEETS_DOCUMENT_ID"] for c in courses_records if c["COURSE_ID"] == int(course_id)]
+
+            if len(course_document_id_list) == 0:
+                raise Exception("course not found...")
+                #TODO: handle within the route
+            if len(course_document_id_list) > 1:
+                raise Exception("course duplicate found...error")
+                #TODO: handle within the route
+            
+            self.set_active_document(course_document_id_list[0])
+
+        # now, get the assignments from the sheet
+        assignment_sheet = self.get_sheet("ASSIGNMENT_MASTER")
+        assignments = assignment_sheet.get_all_records()
+        assignments_names_points = [{'NAME': a['NAME'], 'POINTS':a['POINTS'], 'DUE_DATE':a['DUE_DATE']} for a in assignments]
+
+        #get student_grade
+        gradebook_sheet = self.get_sheet("GRADEBOOK")
+        all_grades_df = pd.DataFrame(gradebook_sheet.get_all_records()).dropna()
+        
+        for i in range(len(assignments_names_points)):
+            name_points = assignments_names_points[i]
+            assignment_name = name_points['NAME']
+            average_score = round(all_grades_df[assignment_name].mean(),2)
+            assignments_names_points[i]['AVERAGE_SCORE'] = average_score
+            assignments_names_points[i]['AVERAGE_PCT'] = f"{(average_score/name_points['POINTS'])*100:.2f}%"
+            
+
+        print(assignments_names_points)
+        return assignments_names_points
+        
+
     def get_course_roster(self, course_id:str):
         if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
             courses_sheet = self.get_sheet("courses")
@@ -275,14 +314,29 @@ class SpreadsheetService:
                 #TODO: handle within the route
             
             self.set_active_document(course_document_id_list[0])
+
+        check_in_sheet = self.get_sheet(check_in_sheet_name)
+        check_in_records = check_in_sheet.get_all_records()
         
         if user_role == "STUDENT":
-            check_in_sheet = self.get_sheet(check_in_sheet_name)
-            check_in_records = check_in_sheet.get_all_records()
             student_check_in_records = [r for r in check_in_records if r.get('Email Address') == email]
             
-            student_records_df = pd.DataFrame(student_check_in_records)
-            print(student_records_df)
+            if len(student_check_in_records) > 0:
+                student_records_df = pd.DataFrame(student_check_in_records)
+                student_records_df.drop(['Timestamp', 'Email Address'])
+                df_keys = list(student_records_df.columns.values)
+
+                return student_records_df.to_dict(), df_keys
+                
+            else:
+                #NO CHECK IN RECORDS FOUND
+                return None
+        elif user_role == "TEACHER" or user_role == "TA":
+            all_records_df = pd.DataFrame(check_in_records)
+            mean_values = all_records_df.select_dtypes(include=['number']).groupby(all_records_df['Week Number']).mean()
+            return mean_values
+
+
             
     
 
@@ -297,11 +351,27 @@ class SpreadsheetService:
         but it'll work for now...
         """
         self.set_active_document(GOOGLE_SHEETS_MASTER_DOCUMENT_ID)
-        students_sheet = self.get_sheet("roster")
-        all_records = students_sheet.get_all_records()
+        roster_sheet = self.get_sheet("roster")
+        all_records = roster_sheet.get_all_records()
         courses_list = [row for row in all_records if row["EMAIL"] == email]
 
+        courses_sheet = self.get_sheet("courses")
+        courses_records = courses_sheet.get_all_records()
+
+        for c in courses_list:
+            course_info = [cr for cr in courses_records if int(cr['COURSE_ID']) == int(c['COURSE_ID'])]
+
+            if len(course_info) == 0:
+                continue
+
+            course_info = course_info[0]
+
+            c['DEPARTMENT'] = course_info['DEPARTMENT']
+            c['NUMBER'] = course_info['NUMBER']
+            c['COURSE_NAME'] = course_info['COURSE_NAME']
+
         return courses_list
+
 
 
 
@@ -310,6 +380,8 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_weekly_check_ins(course_id=12345, email='at2015@nyu.edu', user_role="STUDENT", check_in_sheet_name="check-ins-aggregate")
+    ss.get_weekly_check_ins("12345", "at2015@nyu.edu", "TA", "check-ins-aggregate")
+
+    #ss.get_student_courses("st4505@nyu.edu")
 
     #ss.get_assignment_scores("st4505@nyu.edu", "12345", "onboarding")

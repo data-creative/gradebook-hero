@@ -83,6 +83,41 @@ def assignment(course_id, assignment_id):
 
     return render_template("assignment.html", assignment_details=assignment_details)
 
+
+#TA/TEACHER ROUTES
+@courses_routes.route("/courses/<course_id>/students")
+@authenticated_route
+@ta_route()
+def courses_teacher_roster(course_id):
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    roster_data = ss.get_course_roster(course_id)
+
+    current_user = session.get('current_user')
+    courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
+
+    if len(courses_info) == 0:
+        flash(str(courses_info))
+        return redirect('/user/courses')
+    
+    return render_template("course_roster.html", roster_data=roster_data, course_id=course_id, personal_course_info=courses_info[0])
+
+
+@courses_routes.route("/courses/<course_id>/assignments")
+@authenticated_route
+@ta_route()
+def course_assignments(course_id):
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    all_assignment_data = ss.get_course_assignments_teacher(course_id)
+
+    current_user = session.get('current_user')
+    courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
+    if len(courses_info) == 0:
+        flash(str(courses_info))
+        return redirect('/user/courses')
+    
+    return render_template("assignments_teacher.html", assignments=all_assignment_data, personal_course_info=courses_info[0])
+
+
 @courses_routes.route("/courses/<course_id>/students/<student_info>")
 @authenticated_route
 @ta_route()
