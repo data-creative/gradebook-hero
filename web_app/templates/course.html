@@ -1,0 +1,45 @@
+{% extends "bootstrap_5_layout.html" %}
+{% set active_page = "courses" %}
+
+{% block content %}
+
+    <h1>Course: {{ COURSE_NAME }}</h1>
+
+    <table class="table table-hover text-center">
+        <tbody>
+            {% if ROLE == "STUDENT" %}
+            <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/assignments">
+                <td>
+                    Assignments
+                </td>
+            </tr>
+            <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/check_ins">
+                <td>
+                    Weekly Check Ins
+                </td>
+            </tr>
+            {% elif ROLE == "TA" or ROLE == "TEACHER" %}
+            <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/students">
+                <td>
+                    Roster
+                </td>
+            </tr>
+            <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/check_ins">
+                <td>
+                    Weekly Check Ins Summary
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            document.querySelectorAll('.clickable-row').forEach(row => {
+                row.addEventListener('click', function() {
+                    window.location.href = this.dataset.href;
+                });
+            });
+        });
+        </script>
+{% endblock %}

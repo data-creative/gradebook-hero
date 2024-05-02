@@ -16,6 +16,7 @@ from gspread.exceptions import SpreadsheetNotFound
 
 import time
 import numpy as np
+import pandas as pd
 
 
 load_dotenv()
@@ -256,6 +257,35 @@ class SpreadsheetService:
         return details_to_return
     
 
+    ####################
+    # WEEKLY CHECK INS #
+    ####################
+    def get_weekly_check_ins(self, course_id:str, email:str, user_role:str, check_in_sheet_name:str):
+        if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
+            courses_sheet = self.get_sheet("courses")
+            courses_records = courses_sheet.get_all_records()
+        
+            course_document_id_list = [c["SHEETS_DOCUMENT_ID"] for c in courses_records if c["COURSE_ID"] == int(course_id)]
+
+            if len(course_document_id_list) == 0:
+                raise Exception("course not found...")
+                #TODO: handle within the route
+            if len(course_document_id_list) > 1:
+                raise Exception("course duplicate found...error")
+                #TODO: handle within the route
+            
+            self.set_active_document(course_document_id_list[0])
+        
+        if user_role == "STUDENT":
+            check_in_sheet = self.get_sheet(check_in_sheet_name)
+            check_in_records = check_in_sheet.get_all_records()
+            student_check_in_records = [r for r in check_in_records if r.get('Email Address') == email]
+            
+            student_records_df = pd.DataFrame(student_check_in_records)
+            print(student_records_df)
+            
+    
+
 
     #####################
     #   AUTH FUNCTIONS  #
@@ -280,8 +310,6 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_courses("cjdelaney02@gmail.com")
-
-    #ss.get_student_courses("st4505@nyu.edu")
+    ss.get_weekly_check_ins(course_id=12345, email='at2015@nyu.edu', user_role="STUDENT", check_in_sheet_name="check-ins-aggregate")
 
     #ss.get_assignment_scores("st4505@nyu.edu", "12345", "onboarding")

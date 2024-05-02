@@ -5,9 +5,33 @@ courses_routes = Blueprint("courses_routes", __name__)
 from web_app.routes.wrappers import authenticated_route, student_route, teacher_route, ta_route
 
 @courses_routes.route("/courses/<course_id>")
-@authenticated_route
+@student_route()
 def course(course_id):
-    print(f"COURSE {course_id}")
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    current_user = session.get("current_user")
+    email = current_user["email"]
+    #TODO: change hard coded email to "email" fetched from session
+    email = "st4505@nyu.edu"
+    ##################################
+
+
+    courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
+
+    if len(courses_info) == 0:
+        flash(str(courses_info))
+        return redirect('/user/courses')
+    
+    print(courses_info)
+    
+    role = courses_info[0].get('USER_TYPE')
+    course_name = courses_info[0].get('COURSE_NAME')
+
+    return render_template("course.html", ROLE=role, COURSE_ID=course_id, COURSE_NAME = course_name)
+
+
+@courses_routes.route("/courses/<course_id>/assignments")
+@student_route()
+def course_assignments(course_id):
     ss = current_app.config["SPREADSHEET_SERVICE"]
     current_user = session.get("current_user")
     email = current_user["email"]
@@ -24,14 +48,16 @@ def course(course_id):
         return redirect('/user/courses')
     
     role = courses_info[0].get('USER_TYPE')
-
-    if role == "STUDENT":
-        assignments_list = ss.get_course_assignments(email, course_id)
-        return render_template("assignments.html", assignments=assignments_list, course_id=course_id)
-    elif role == "TEACHER" or role == "TA":
-        roster_data = ss.get_course_roster(course_id)
-        return render_template("course_roster.html", roster_data=roster_data, course_id=course_id)
+    assignments_list = ss.get_course_assignments(email, course_id)
     return render_template("assignments.html", assignments=assignments_list, course_id=course_id)
+
+@courses_routes.route("/courses/<course_id>/students")
+@ta_route()
+def course_students(course_id):
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    roster_data = ss.get_course_roster(course_id)
+    return render_template("course_students.html", roster_data=roster_data, course_id=course_id)
+
 
 
 @courses_routes.route("/courses/<course_id>/assignments/<assignment_id>")
@@ -68,3 +94,29 @@ def student_grades(course_id, student_info):
     ss = current_app.config["SPREADSHEET_SERVICE"]
     assignments_list = ss.get_course_assignments(student_email, course_id)
     return render_template("assignments_teacher.html", assignments=assignments_list, course_id=course_id, student_email=student_email, first_name=first_name, last_name=last_name)
+
+
+@courses_routes.route("/courses/<course_id>/check_ins")
+@authenticated_route
+@ta_route()
+def student_grades(course_id, student_info):
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    current_user = session.get("current_user")
+    email = current_user["email"]
+    #TODO: change hard coded email to "email" fetched from session
+    email = "st4505@nyu.edu"
+    ##################################
+
+
+    courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
+
+    if len(courses_info) == 0:
+        flash(str(courses_info))
+        return redirect('/user/courses')
+    
+    user_role = courses_info[0].get('USER_TYPE')
+    course_name = courses_info[0].get('COURSE_NAME')
+    check_in_sheet_name = courses_info[0].get('CHECK_IN_SHEET_NAME')
+
+    if user_role == "STUDENT":
+        check_in_data = ss.get_weekly_check_ins(course_id=course_id, email=email, user_role=user_role, check_in_sheet_name=check_in_sheet_name)
