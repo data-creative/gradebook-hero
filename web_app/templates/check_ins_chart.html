@@ -1,0 +1,66 @@
+{% extends "bootstrap_5_layout.html" %}
+{% set active_page = "courses" %}
+
+{% block content %}
+    <!-- Import Chart.js through CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <h1>{{course_name}}: Check-in Aggregate Data</h1>
+    <hr>
+
+    <canvas id="myChart" style="max-height: 600px; width: 100%;"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Make sure JSON data is correctly handled by using | tojson | safe
+            var rawData = {{ formatted_data | tojson | safe }};
+            var datasets = [];
+
+            // Predefined set of distinct colors
+            var colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED', '#605ca8'];
+
+            // Assuming 'rawData' is an array of objects where each object has week as one key and metrics as others
+            const metrics = Object.keys(rawData[0]).filter(key => key !== 'Week Number');
+            const weeks = rawData.map(item => item['Week Number']);
+
+            metrics.forEach((metric, index) => {
+                var dataPoints = rawData.map(weekData => ({
+                    x: weekData['Week Number'],
+                    y: weekData[metric]
+                }));
+
+                datasets.push({
+                    label: metric,
+                    data: dataPoints,
+                    backgroundColor: colors[index % colors.length], // Cycle through colors array
+                    borderColor: colors[index % colors.length], // Optional: Set border color to match
+                    showLine: true,
+                    fill: false,
+                    pointRadius: 5, // Make points larger
+                    pointHoverRadius: 7 // Larger when hovered
+                });
+            });
+
+            var ctx = document.getElementById('myChart').getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: datasets },
+                options: {
+                    responsive: true, // Ensure the chart is responsive
+                    maintainAspectRatio: false, // Allow custom dimensions
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: weeks,
+                            title: { display: true, text: 'Week' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Value' }
+                        }
+                    }
+                }
+            });
+        });
+
+    </script>
+{% endblock %}

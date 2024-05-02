@@ -138,10 +138,39 @@ def check_ins(course_id):
     user_role = courses_info[0].get('USER_TYPE')
     course_name = courses_info[0].get('COURSE_NAME')
     check_in_sheet_name = courses_info[0].get('CHECK_IN_SHEET_NAME')
+    check_in_form_id = courses_info[0].get('CHECK_IN_FORM_ID')
 
     print("-----")
     print(courses_info[0])
 
     if user_role == "STUDENT":
         check_in_data, check_in_headers = ss.get_weekly_check_ins(course_id=course_id, email=email, user_role=user_role, check_in_sheet_name=check_in_sheet_name)
-        return render_template("check_ins_student.html", course_id=course_id, course_name=course_name, check_in_data=check_in_data, check_in_headers=check_in_headers)
+        return render_template("check_ins_student.html", course_id=course_id, course_name=course_name, check_in_data=check_in_data, check_in_headers=check_in_headers, check_in_form_id=check_in_form_id)
+    
+    else: #ta, teacher, or admin
+        check_in_data, check_in_headers, week_numbers = ss.get_weekly_check_ins(course_id=course_id, email=email, user_role=user_role, check_in_sheet_name=check_in_sheet_name)
+        return render_template("check_ins_teacher.html", course_id=course_id, course_name=course_name, check_in_data=check_in_data, check_in_headers=check_in_headers, week_numbers=week_numbers)
+    
+
+@courses_routes.route("/courses/<course_id>/check_ins/chart")
+@authenticated_route
+@ta_route()
+def check_ins_chart(course_id):
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    current_user = session.get("current_user")
+    email = current_user["email"]
+
+
+    courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
+
+    if len(courses_info) == 0:
+        flash(str(courses_info))
+        return redirect('/user/courses')
+    
+    user_role = courses_info[0].get('USER_TYPE')
+    course_name = courses_info[0].get('COURSE_NAME')
+    check_in_sheet_name = courses_info[0].get('CHECK_IN_SHEET_NAME')
+    check_in_form_id = courses_info[0].get('CHECK_IN_FORM_ID')
+
+    formatted_data = ss.get_check_ins_chart(course_id=course_id, check_in_sheet_name=check_in_sheet_name)
+    return render_template("check_ins_chart.html", course_name=course_name, formatted_data=formatted_data)

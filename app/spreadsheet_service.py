@@ -333,8 +333,34 @@ class SpreadsheetService:
                 return None
         elif user_role == "TEACHER" or user_role == "TA":
             all_records_df = pd.DataFrame(check_in_records)
-            mean_values = all_records_df.select_dtypes(include=['number']).groupby(all_records_df['Week Number']).mean()
-            return mean_values.to_dict(orient='records')
+            df_keys = list(all_records_df.columns.values)
+            week_numbers = list(all_records_df['Week Number'].unique())
+
+            return all_records_df.to_dict(orient='records'), df_keys, week_numbers
+        
+    def get_check_ins_chart(self, course_id:str, check_in_sheet_name:str):
+        if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
+            courses_sheet = self.get_sheet("courses")
+            courses_records = courses_sheet.get_all_records()
+        
+            course_document_id_list = [c["SHEETS_DOCUMENT_ID"] for c in courses_records if c["COURSE_ID"] == int(course_id)]
+
+            if len(course_document_id_list) == 0:
+                raise Exception("course not found...")
+                #TODO: handle within the route
+            if len(course_document_id_list) > 1:
+                raise Exception("course duplicate found...error")
+                #TODO: handle within the route
+            
+            self.set_active_document(course_document_id_list[0])
+
+        check_in_sheet = self.get_sheet(check_in_sheet_name)
+        check_in_records = check_in_sheet.get_all_records()
+        all_records_df = pd.DataFrame(check_in_records)
+        numeric_df = all_records_df.select_dtypes(include=['number'])
+        numeric_df['Week Number'] = all_records_df['Week Number']
+        mean_values = numeric_df.groupby('Week Number').mean().reset_index()
+        return mean_values.to_dict(orient='records')
 
 
             
@@ -382,8 +408,8 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    ss.get_weekly_check_ins("12345", "at2015@nyu.edu", "TA", "check-ins-aggregate")
-
+    data = ss.get_weekly_check_ins("12345", "at2015@nyu.edu", "TA", "check-ins-aggregate")
+    print(data)
     #ss.get_student_courses("st4505@nyu.edu")
 
     #ss.get_assignment_scores("st4505@nyu.edu", "12345", "onboarding")

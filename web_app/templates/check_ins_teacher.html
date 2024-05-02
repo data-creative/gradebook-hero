@@ -1,0 +1,67 @@
+{% extends "bootstrap_5_layout.html" %}
+{% set active_page = "assignments" %}
+
+{% block content %}
+
+<h1>Check Ins: {{ course_name }}</h1>
+<h4><a href="/courses/{{course_id}}/check_ins/chart">View Chart</a></h4>
+
+<hr>
+
+<select id="weekFilter" onchange="filterTable()">
+    <option value="">Select a Week</option>
+    {% for week in week_numbers %}
+    <option value="{{ week }}">{{ week }}</option>
+    {% endfor %}
+</select>
+
+<!-- Ensure the table has an id -->
+<table id="data-table" class="table table-hover text-center">
+    <thead>
+        <tr>
+            {% for col in check_in_headers %}
+            <th scope="col">{{ col }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for data in check_in_data %}
+        <tr class="data-row">
+            {% for col in check_in_headers %}
+            <!-- Assign 'week-column' class to the 'Week Number' cell -->
+            <td {% if col == 'Week Number' %}class="week-column"{% endif %}>{{ data[col] }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    function filterTable() {
+        var select = document.getElementById("weekFilter");
+        var week = select.value;
+        var rows = document.querySelectorAll("#data-table .data-row");
+
+        rows.forEach(function(row) {
+            var weekCell = row.querySelector(".week-column");
+            if (week && weekCell.textContent.trim() === week) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', function() {
+            window.location.href = this.dataset.href;
+        });
+    });
+    filterTable();
+});
+</script>
+
+{% endblock %}
