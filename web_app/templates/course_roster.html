@@ -18,7 +18,7 @@
     </thead>
     <tbody>
         {% for d in roster_data %}
-        <tr class="{% if course_status == 'TA' or course_status == 'TEACHER' %}clickable-row{% endif %}" {% if course_status == 'TA' or course_status == 'TEACHER' %}data-href="/courses/{{ course_id }}/students/{{ d.Last }}__{{ d.First }}__{{ d.Email }}"{% endif %}>
+        <tr class="{% if course_status == 'TA' or course_status == 'TEACHER' %}clickable-row{% endif %}" {% if course_status == 'TA' or course_status == 'TEACHER' %}data-href="/courses/{{ course_id }}/students/{{ d.Email }}/assignments"{% endif %}>
             <td>{{ d.Last }}</td>
             <td>{{ d.First }}</td>
             <td>{{ d.Email }}</td>

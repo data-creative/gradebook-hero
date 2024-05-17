@@ -17,6 +17,8 @@ def course(course_id):
 
     courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
 
+    print(courses_info)
+
     if len(courses_info) == 0:
         flash(str(courses_info))
         return redirect('/user/courses')
@@ -25,8 +27,9 @@ def course(course_id):
     
     role = courses_info[0].get('USER_TYPE')
     course_name = courses_info[0].get('COURSE_NAME')
+    professor = courses_info[0].get('PROFESSOR')
 
-    return render_template("course.html", ROLE=role, COURSE_ID=course_id, COURSE_NAME = course_name)
+    return render_template("course.html", ROLE=role, COURSE_ID=course_id, COURSE_NAME=course_name, PROFESSOR=professor)
 
 
 @courses_routes.route("/courses/<course_id>/assignments")
@@ -48,8 +51,22 @@ def course_assignments(course_id):
         return redirect('/user/courses')
     
     role = courses_info[0].get('USER_TYPE')
-    assignments_list = ss.get_course_assignments(email, course_id)
-    return render_template("assignments.html", assignments=assignments_list, course_id=course_id)
+
+    if role == "STUDENT":
+        try:
+            assignments_list = ss.get_course_assignments(email, course_id)
+            return render_template("assignments.html", assignments=assignments_list, course_id=course_id)
+        except Exception as e:
+            flash(str(e))
+            return redirect("/user/courses")
+    
+    else:
+        try:
+            assignments_list = ss.get_course_assignments_teacher(course_id)
+            return render_template("assignments_teacher.html", assignments=assignments_list, course_id=course_id)
+        except Exception as e:
+            flash(str(e))
+            return redirect("/user/courses")
 
 
 
@@ -60,21 +77,34 @@ def assignment(course_id, assignment_id):
     print(f"COURSE {course_id}: ASSIGNMENT {assignment_id}")
     ss = current_app.config["SPREADSHEET_SERVICE"]
     current_user = session.get("current_user")
-    email = current_user["email"]
+    courses_info = [c for c in current_user.get('user_courses') if int(c['COURSE_ID']) == int(course_id)]
 
-    #TODO: CHANGE THIS ####
-    email = "st4505@nyu.edu"
-    #######################
+    if len(courses_info) == 0:
+        flash(str(courses_info))
+        return redirect('/user/courses')
 
-    try:
-        assignment_details = ss.get_assignment_scores(email, course_id, assignment_id)
+    role = courses_info[0].get('USER_TYPE')
 
-    except Exception as e:
-        flash('Error, could not fetch assignment details')
-        flash(str(e))
-        return redirect(f'/courses/{course_id}')
+    if role == "STUDENT":
 
-    return render_template("assignment.html", assignment_details=assignment_details)
+        email = current_user["email"]
+
+        #TODO: CHANGE THIS ####
+        email = "st4505@nyu.edu"
+        #######################
+
+        try:
+            assignment_details = ss.get_assignment_scores(email, course_id, assignment_id)
+            return render_template("assignment.html", assignment_details=assignment_details)
+
+        except Exception as e:
+            flash('Error, could not fetch assignment details')
+            flash(str(e))
+            return redirect(f'/courses/{course_id}')
+
+    else:
+        assignment_name, assignment_grades = ss.get_assignment_grades_teacher(course_id, assignment_id)
+        return render_template("assignment_grades_teacher.html", assignment_grades=assignment_grades, assignment_name=assignment_name, assignment_id=assignment_id, course_id=course_id)
 
 
 #TA/TEACHER ROUTES
@@ -101,17 +131,36 @@ def courses_teacher_roster(course_id):
 
 
 
-@courses_routes.route("/courses/<course_id>/students/<student_info>")
+@courses_routes.route("/courses/<course_id>/students/<student_email>/assignments")
 @authenticated_route
 @ta_route()
-def student_grades(course_id, student_info):
-    student_info_list = student_info.split("__")
-    last_name = student_info_list[0]
-    first_name = student_info_list[1]
-    student_email = student_info_list[2]
+def student_grades(course_id, student_email):
     ss = current_app.config["SPREADSHEET_SERVICE"]
-    assignments_list = ss.get_course_assignments(student_email, course_id)
-    return render_template("assignments_teacher.html", assignments=assignments_list, course_id=course_id, student_email=student_email, first_name=first_name, last_name=last_name)
+    try:
+        assignments_list = ss.get_course_assignments(student_email, course_id)
+    except:
+        flash('Error, could not fetch student details')
+        return redirect("/courses/<course_id>/roster")
+    
+    return render_template("student_assignments_teacher.html", assignments=assignments_list, course_id=course_id, student_email=student_email)
+
+
+@courses_routes.route("/courses/<course_id>/students/<student_email>/assignments/<assignment_id>")
+@authenticated_route
+@ta_route()
+def assignment_details(course_id, student_email, assignment_id):
+    ss = current_app.config["SPREADSHEET_SERVICE"]
+    #try:
+    assignment_details = ss.get_assignment_scores(student_email, course_id, assignment_id)
+
+    """
+    except Exception as e:
+        flash('Error, could not fetch assignment details')
+        flash(str(e))
+        return redirect(f'/courses/{course_id}')
+    """
+
+    return render_template("assignment_teacher.html", assignment_details=assignment_details, student_email=student_email)
 
 
 @courses_routes.route("/courses/<course_id>/check_ins")
@@ -136,9 +185,6 @@ def check_ins(course_id):
     course_name = courses_info[0].get('COURSE_NAME')
     check_in_sheet_name = courses_info[0].get('CHECK_IN_SHEET_NAME')
     check_in_form_id = courses_info[0].get('CHECK_IN_FORM_ID')
-
-    print("-----")
-    print(courses_info[0])
 
     if user_role == "STUDENT":
         check_in_data, check_in_headers = ss.get_weekly_check_ins(course_id=course_id, email=email, user_role=user_role, check_in_sheet_name=check_in_sheet_name)

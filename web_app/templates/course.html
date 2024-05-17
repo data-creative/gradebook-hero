@@ -4,6 +4,7 @@
 {% block content %}
 
     <h1>Course: {{ COURSE_NAME }}</h1>
+    <p>Taught by {{ PROFESSOR }} {% if ROLE == "TEACHER" %} (you) {% endif %}</p>
 
     <table class="table table-hover text-center">
         <tbody>
@@ -24,9 +25,9 @@
                     Weekly Check Ins Summary
                 </td>
             </tr>
-            <tr class="clickable-row"  data-href="#">
+            <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/assignments">
                 <td>
-                    **ADD ASSIGNMENTS PAGE**
+                    Assignments
                 </td>
             </tr>
             {% endif %}

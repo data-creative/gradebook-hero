@@ -3,7 +3,7 @@
 
 {% block content %}
 
-    <h2>Assignments - {{first_name}} {{last_name}} ({{student_email}})</h2>
+    <h1>Assignments: {{student_email}}</h1>
 
     <table class="table table-hover text-center">
         <thead>
@@ -16,7 +16,7 @@
         </thead>
         <tbody>
             {% for a in assignments %}
-            <tr class="clickable-row" data-href="/courses/{{ course_id }}/students/{{last_name}}__{{first_name}}__{{student_email}}/assignments/{{ a.SHEET_NAME }}">
+            <tr class="clickable-row" data-href="/courses/{{ course_id }}/students/{{ student_email }}/assignments/{{ a.SHEET_NAME }}">
                 <td>
                     {{ a.NAME }}
                 </td>

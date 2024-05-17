@@ -2,9 +2,10 @@
 {% set active_page = "assignment" %}
 
 {% block content %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-    <h2>{{ first_name }} {{ last_name }}: {{assignment_details.NAME}}</h2>
-    <h4>Due: {{assignment_details.DUE_DATE}}</h4>
+    <h1>{{assignment_details.NAME}} -- {{ student_email }}</h1>
+    <h3>Due: {{assignment_details.DUE_DATE}}</h3>
     <hr>
 
     {% if assignment_details.STUDENT_DETAILS is defined and assignment_details.STUDENT_DETAILS|length > 0 %}
@@ -18,15 +19,9 @@
                 <tbody>
                     {% for a in assignment_details.STUDENT_DETAILS %}
                     <tr>
-                        <td>
-                            {{ a.metric }}
-                        </td>
-                        <td>
-                            {{ a.score }}
-                        </td>
-                        <td>
-                            {{ a.comments }}
-                        </td>
+                        <td>{{ a.metric }}</td>
+                        <td>{{ a.score }}</td>
+                        <td>{{ a.comments }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -39,8 +34,62 @@
     </h4>
     <hr>
     <h3>DETAILS:</h3>
+    <div id="boxPlotChart" style="width:60%;height:200px;"></div>
     <p>Mean: {{ assignment_details.CLASS_MEAN }}</p>
+    <p>High: {{ assignment_details.CLASS_HIGH }}</p>
+    <p>Low: {{ assignment_details.CLASS_LOW }}</p>
     <p>Lower Quartile: {{ assignment_details.CLASS_LOWER_QUARTILE }}</p>
     <p>Upper Quartile: {{ assignment_details.CLASS_UPPER_QUARTILE }}</p>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const trace1 = {
+                y: ['Scores'],
+                type: 'box',
+                q1: [{{ assignment_details.CLASS_LOWER_QUARTILE }}],
+                median: [{{ assignment_details.CLASS_MEAN }}],
+                q3: [{{ assignment_details.CLASS_UPPER_QUARTILE }}],
+                lowerfence: [{{ assignment_details.CLASS_LOW }}],
+                upperfence: [{{ assignment_details.CLASS_HIGH }}],
+                marker: {color: 'blue'},
+                boxpoints: false,
+                orientation: 'h',
+                hoverinfo: 'none' // Disable hover info for this trace
+            };
+
+            const trace2 = {
+                x: [{{ assignment_details.FINAL_SCORE }}],
+                y: ['Scores'],
+                mode: 'markers',
+                type: 'scatter',
+                marker: {color: 'red', size: 12},
+                orientation: 'h',
+                hoverinfo: 'none' // Disable hover info for this trace
+            };
+
+            const layout = {
+                xaxis: {
+                    title: 'Scores',
+                    range: [{{ assignment_details.CLASS_LOW - 1 }}, {{ assignment_details.CLASS_HIGH + 1 }}] // Add some padding
+                },
+                yaxis: {
+                    visible: false // Hide the y-axis
+                },
+                showlegend: false, // Hide the legend
+                margin: {
+                    l: 50,
+                    r: 50,
+                    t: 50,
+                    b: 50
+                },
+                hovermode: false // Disable hover interactions
+            };
+
+            const config = {
+                displayModeBar: false // Disable the mode bar
+            };
+
+            Plotly.newPlot('boxPlotChart', [trace1, trace2], layout, config);
+        });
+    </script>
 {% endblock %}

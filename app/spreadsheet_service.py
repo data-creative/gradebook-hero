@@ -156,7 +156,7 @@ class SpreadsheetService:
         # now, get the assignments from the sheet
         assignment_sheet = self.get_sheet("ASSIGNMENT_MASTER")
         assignments = assignment_sheet.get_all_records()
-        assignments_names_points = [{'NAME': a['NAME'], 'POINTS':a['POINTS'], 'DUE_DATE':a['DUE_DATE']} for a in assignments]
+        assignments_names_points = [{'NAME': a['NAME'], 'POINTS':a['POINTS'], 'DUE_DATE':a['DUE_DATE'], 'SHEET_NAME':a['SHEET_NAME']} for a in assignments]
 
         #get student_grade
         gradebook_sheet = self.get_sheet("GRADEBOOK")
@@ -172,6 +172,40 @@ class SpreadsheetService:
 
         print(assignments_names_points)
         return assignments_names_points
+    
+    def get_assignment_grades_teacher(self, course_id:str, assignment_id:str):
+        #if coming from "courses" page, the active document will be "MASTER"
+        #we want to change that to the document ID of the specific course
+        if self.doc.id == GOOGLE_SHEETS_MASTER_DOCUMENT_ID:
+            courses_sheet = self.get_sheet("courses")
+            courses_records = courses_sheet.get_all_records()
+        
+            course_document_id_list = [c["SHEETS_DOCUMENT_ID"] for c in courses_records if c["COURSE_ID"] == int(course_id)]
+
+            if len(course_document_id_list) == 0:
+                raise Exception("course not found...")
+                #TODO: handle within the route
+            if len(course_document_id_list) > 1:
+                raise Exception("course duplicate found...error")
+                #TODO: handle within the route
+            
+            self.set_active_document(course_document_id_list[0])
+
+        # now, get the assignments from the sheet
+        assignment_sheet = self.get_sheet("ASSIGNMENT_MASTER")
+        assignments = assignment_sheet.get_all_records()
+        assignment_matches = [a for a in assignments if a['SHEET_NAME'] == assignment_id]
+
+        if len(assignment_matches) == 0:
+            raise Exception("Assignment not found!")
+        
+        assignment_name = assignment_matches[0].get('NAME')
+
+        gradebook_sheet = self.get_sheet("GRADEBOOK")
+        all_grades_df = pd.DataFrame(gradebook_sheet.get_all_records()).dropna()
+        all_grades_df = all_grades_df[['Last', 'First', 'Email', assignment_name]]
+
+        return assignment_name, all_grades_df.to_dict(orient='records')
         
 
     def get_course_roster(self, course_id:str):
@@ -401,6 +435,7 @@ class SpreadsheetService:
             c['COURSE_NAME'] = course_info['COURSE_NAME']
             c['CHECK_IN_SHEET_NAME'] = course_info['CHECK_IN_SHEET_NAME']
             c['CHECK_IN_FORM_ID'] = course_info['CHECK_IN_FORM_ID']
+            c['PROFESSOR'] = course_info['PROFESSOR']
 
         return courses_list
 
@@ -412,8 +447,6 @@ if __name__ == "__main__":
 
     ss = SpreadsheetService()
 
-    data = ss.get_weekly_check_ins("12345", "at2015@nyu.edu", "TA", "check-ins-aggregate")
+    name, data = ss.get_assignment_grades_teacher("12345", "rps-mjr")
+    print(name)
     print(data)
-    #ss.get_student_courses("st4505@nyu.edu")
-
-    #ss.get_assignment_scores("st4505@nyu.edu", "12345", "onboarding")
