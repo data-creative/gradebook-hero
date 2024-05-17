@@ -19,17 +19,22 @@
                 </td>
             </tr>
             {% elif ROLE == "TA" or ROLE == "TEACHER" %}
-            <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/students">
-                <td>
-                    Roster
-                </td>
-            </tr>
             <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/check_ins">
                 <td>
                     Weekly Check Ins Summary
                 </td>
             </tr>
+            <tr class="clickable-row"  data-href="#">
+                <td>
+                    **ADD ASSIGNMENTS PAGE**
+                </td>
+            </tr>
             {% endif %}
+            <tr class="clickable-row"  data-href="/courses/{{ COURSE_ID }}/roster">
+                <td>
+                    Roster
+                </td>
+            </tr>
         </tbody>
     </table>
 

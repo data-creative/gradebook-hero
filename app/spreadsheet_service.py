@@ -280,6 +280,8 @@ class SpreadsheetService:
         class_mean = round(all_student_scores.mean(),2)
         class_upper_quartile = np.percentile(all_student_scores, 75)
         class_lower_quartile = np.percentile(all_student_scores, 25)
+        class_low = np.min(all_student_scores)
+        class_high = np.max(all_student_scores)
 
         #transform all assignment data into website-readable format
         details_to_return = {
@@ -290,6 +292,8 @@ class SpreadsheetService:
             "CLASS_MEAN": class_mean,
             "CLASS_UPPER_QUARTILE": class_upper_quartile,
             "CLASS_LOWER_QUARTILE": class_lower_quartile,
+            "CLASS_HIGH": class_high,
+            "CLASS_LOW": class_low,
             "STUDENT_DETAILS": scores_to_return
         }
 

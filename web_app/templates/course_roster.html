@@ -11,21 +11,26 @@
             <th scope="col">Last</th>
             <th scope="col">First</th>
             <th scope="col">Email</th>
-            <th scope="col">Current Grade</th>
+            {% if course_status == "TA" or course_status == "TEACHER" %}
+                <th scope="col">Current Grade</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
         {% for d in roster_data %}
-        <tr class="clickable-row" data-href="/courses/{{ course_id }}/students/{{ d.Last }}__{{ d.First }}__{{ d.Email }}">
+        <tr class="{% if course_status == 'TA' or course_status == 'TEACHER' %}clickable-row{% endif %}" {% if course_status == 'TA' or course_status == 'TEACHER' %}data-href="/courses/{{ course_id }}/students/{{ d.Last }}__{{ d.First }}__{{ d.Email }}"{% endif %}>
             <td>{{ d.Last }}</td>
             <td>{{ d.First }}</td>
             <td>{{ d.Email }}</td>
-            <td>{{ d.TOTAL }}</td>
+            {% if course_status == "TA" or course_status == "TEACHER" %}
+                <td>{{ d.TOTAL }}</td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
+{% if course_status == "TA" or course_status == "TEACHER" %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const rows = document.querySelectorAll('.clickable-row');
@@ -36,5 +41,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+{% endif %}
 
 {% endblock %}
