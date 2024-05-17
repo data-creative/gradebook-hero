@@ -19,5 +19,5 @@ gunicorn
 
 # testing:
 pytest
-
+pandas
 numpy
